@@ -1,13 +1,9 @@
 import { Mesh, initMeshBuffers } from 'webgl-obj-loader'
-require('./util')
 
-const quadVertices = [
-  // positions   // texture Coords
-  -1.0, 1.0, 0.0, 0.0, 1.0,
-  -1.0, -1.0, 0.0, 0.0, 0.0,
-  1.0, 1.0, 0.0, 1.0, 1.0,
-  1.0, -1.0, 0.0, 1.0, 0.0,
-]
+import FBhelper from './FBhelper'
+import touchInput from './touchInput'
+import desktopInput from './desktopInput'
+import {mobilecheck, loadImage} from './util'
 
 class ArGL {
   constructor({ width, height } = {
@@ -28,6 +24,7 @@ class ArGL {
     this.el.appendChild(this.loadingBar)
 
     this.resource = {}
+    this.resource.images = []
     this.resourceCount = 0
     this.loadProgress = []
     let self = this
@@ -59,145 +56,6 @@ class ArGL {
     }
   }
 
-  addTouchInput(){
-    this.mobile = true
-    // touch controls
-
-    let self = this
-
-
-    // 移动端横屏 应在具体应用中实现
-    //-----------
-    // let tip = document.createElement('span')
-    // tip.innerText = '横屏以获取最佳体验'
-
-    // //screen.width screen.height
-    // //window.innerHeight  window.innerWidth
-
-    // function detectOrient(){
-    //   if (screen.orientation.angle % 180 === 0) {
-    //     self.el.appendChild(tip)
-    //     self.canvas.width = Math.min(self.options.width, screen.width-16)
-    //     self.canvas.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight) -16)
-    //   } else {
-    //     tip.remove()
-    //     self.canvas.width = Math.min(self.options.width, screen.width-16)
-    //     self.canvas.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight)  -16)
-    //   }
-    // }
-    // detectOrient()
-    // window.addEventListener('orientationchange',detectOrient)
-
-    this.canvas.addEventListener("touchstart", handleStart, false)
-    this.canvas.addEventListener("touchend", handleEnd, false)
-    this.canvas.addEventListener("touchmove", handleMove, false)
-
-    this.ongoingTouches = new Array()
-    function handleStart(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for(let i=0;i<touches.length;i++){
-        touches[i].startX = touches[i].pageX
-        touches[i].startY = touches[i].pageY
-        touches[i].deltaX = 0
-        touches[i].deltaY = 0
-        self.ongoingTouches.push(touches[i])
-      }
-    }
-
-    function handleEnd(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for(let i=0;i<touches.length;i++){
-        let idx = ongoingTouchIndexById(touches[i].identifier)
-        touches[i].pageX
-        touches[i].pageY
-        self.ongoingTouches.splice(i, 1)
-      }
-    }
-    function handleMove(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for(let i=0;i<touches.length;i++){
-        let idx = ongoingTouchIndexById(touches[i].identifier)
-
-        touches[i].pageY
-        touches[i].startX = self.ongoingTouches[idx].startX
-        touches[i].startY = self.ongoingTouches[idx].startY
-        touches[i].deltaX = touches[i].pageX - self.ongoingTouches[idx].pageX
-        touches[i].deltaY = touches[i].pageY - self.ongoingTouches[idx].pageY
-
-        // console.log(self.ongoingTouches[idx].pageX, touches[i].pageX, self.ongoingTouches[0])
-        self.ongoingTouches.splice(idx, 1, touches[i])  // swap in the new touch record
-      }
-
-    }
-
-    function ongoingTouchIndexById(idToFind) {
-      for (let i=0; i<self.ongoingTouches.length; i++) {
-        let id = self.ongoingTouches[i].identifier
-
-        if (id === idToFind) {
-          return i
-        }
-      }
-      return -1   // not found
-    }
-  }
-
-  addDesktopInput(){
-    this.mobile = false
-    // desktop controls
-    this.currentlyPressedKeys = {}
-    this.mouseMovement = {
-      x: 0,
-      y: 0
-    }
-    this.wheelDeltaY = 0
-
-    let self = this
-
-    this.canvas.requestPointerLock = this.canvas.requestPointerLock ||
-      this.canvas.mozRequestPointerLock
-    this.canvas.exitPointerLock = this.canvas.exitPointerLock ||
-      this.canvas.mozExitPointerLock
-    this.canvas.onclick = function () {
-      self.canvas.requestPointerLock()
-    }
-    document.addEventListener('pointerlockchange', handleLockChange, false)
-    document.addEventListener('mozpointerlockchange', handleLockChange, false)
-
-    function handleKeyDown(e) {
-      self.currentlyPressedKeys[e.key] = true
-    }
-    function handleKeyUp(e) {
-      self.currentlyPressedKeys[e.key] = false
-    }
-    function mouse_callback(e) {
-      self.mouseMovement.x = e.movementX || 0
-      self.mouseMovement.y = e.movementY || 0
-    }
-    function wheel_callback(e) {
-      self.wheelDeltaY = e.wheelDeltaY
-    }
-
-    function handleLockChange() {
-      if (document.pointerLockElement === self.canvas ||
-        document.mozPointerLockElement === self.canvas) {
-        document.addEventListener('keydown', handleKeyDown)
-        document.addEventListener('keyup', handleKeyUp)
-        document.addEventListener('mousemove', mouse_callback)
-        document.addEventListener('wheel', wheel_callback)
-      } else {
-        document.removeEventListener('keydown', handleKeyDown)
-        document.removeEventListener('keyup', handleKeyUp)
-        document.removeEventListener('mousemove', mouse_callback)
-        document.removeEventListener('wheel', wheel_callback)
-      }
-
-    }
-  }
-
   resize() {
     // 获取浏览器中画布的显示尺寸
     let displayWidth = this.canvas.clientWidth
@@ -224,8 +82,8 @@ class ArGL {
     this.resize()
     this.draw(time)
 
-    if(this.mobile){
-      for(let i in this.ongoingTouches){
+    if (this.mobile) {
+      for (let i in this.ongoingTouches) {
         this.ongoingTouches[i].deltaX = 0
         this.ongoingTouches[i].deltaY = 0
       }
@@ -238,29 +96,31 @@ class ArGL {
   }
 
 
-  loadMesh(objString, shader) {
+  loadMesh(objString) {
     let mesh = new Mesh(objString)
     initMeshBuffers(this.gl, mesh)
-    mesh.a_position = this.gl.getAttribLocation(shader.program, 'a_position')
-    mesh.a_texCoord = this.gl.getAttribLocation(shader.program, 'a_texCoord')
-    mesh.a_normal = this.gl.getAttribLocation(shader.program, 'a_normal')
-
-    mesh.vao = this.gl.createVertexArray()
-    this.gl.bindVertexArray(mesh.vao)
-
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, mesh.vertexBuffer)
-    this.gl.vertexAttribPointer(mesh.a_position, 3, this.gl.FLOAT, false, 0, 0)
-    this.gl.enableVertexAttribArray(mesh.a_position)
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, mesh.textureBuffer)
-    this.gl.vertexAttribPointer(mesh.a_texCoord, 2, this.gl.FLOAT, false, 0, 0)
-    this.gl.enableVertexAttribArray(mesh.a_texCoord)
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, mesh.normalBuffer)
-    this.gl.vertexAttribPointer(mesh.a_normal, 3, this.gl.FLOAT, false, 0, 0)
-    this.gl.enableVertexAttribArray(mesh.a_normal)
-
-    this.gl.bindVertexArray(null)
 
     let self = this
+    mesh.setVAO = function (shader) {
+      this.a_position = self.gl.getAttribLocation(shader.program, 'a_position')
+      this.a_texCoord = self.gl.getAttribLocation(shader.program, 'a_texCoord')
+      this.a_normal = self.gl.getAttribLocation(shader.program, 'a_normal')
+
+      this.vao = self.gl.createVertexArray()
+      self.gl.bindVertexArray(this.vao)
+
+      self.gl.bindBuffer(self.gl.ARRAY_BUFFER, this.vertexBuffer)
+      self.gl.vertexAttribPointer(this.a_position, 3, self.gl.FLOAT, false, 0, 0)
+      self.gl.enableVertexAttribArray(this.a_position)
+      self.gl.bindBuffer(self.gl.ARRAY_BUFFER, this.textureBuffer)
+      self.gl.vertexAttribPointer(this.a_texCoord, 2, self.gl.FLOAT, false, 0, 0)
+      self.gl.enableVertexAttribArray(this.a_texCoord)
+      self.gl.bindBuffer(self.gl.ARRAY_BUFFER, this.normalBuffer)
+      self.gl.vertexAttribPointer(this.a_normal, 3, self.gl.FLOAT, false, 0, 0)
+      self.gl.enableVertexAttribArray(this.a_normal)
+
+      self.gl.bindVertexArray(null)
+    }
     mesh.draw = function () {
       self.gl.bindVertexArray(this.vao)
       self.gl.bindBuffer(self.gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
@@ -310,86 +170,11 @@ class ArGL {
 
   }
 
-  static loadImage(imageUrl, onprogress) {
-    return new Promise((resolve, reject) => {
-      let xhr = new XMLHttpRequest()
-      let notifiedNotComputable = false
-
-      xhr.open('GET', imageUrl, true)
-      xhr.responseType = 'arraybuffer'
-
-      xhr.onprogress = function (ev) {
-        if (ev.lengthComputable) {
-          onprogress(parseInt((ev.loaded / ev.total) * 100))
-        } else {
-          if (!notifiedNotComputable) {
-            notifiedNotComputable = true
-            onprogress(-1)
-          }
-        }
-      }
-
-      xhr.onloadend = function () {
-        if (!xhr.status.toString().match(/^2/)) {
-          reject(xhr)
-        } else {
-          if (!notifiedNotComputable) {
-            onprogress(100)
-          }
-
-          let options = {}
-          let headers = xhr.getAllResponseHeaders()
-          let m = headers.match(/^Content-Type\:\s*(.*?)$/mi)
-
-          if (m && m[1]) {
-            options.type = m[1]
-          }
-
-          let blob = new Blob([this.response], options)
-          var imageUrl = window.URL.createObjectURL(blob)
-          let img = new Image()
-          img.src = imageUrl
-          img.onload = () => resolve(img)
-        }
-      }
-
-      xhr.send()
-    })
-  }
-
-
-  // loadImage(src) {
-  //   return new Promise((resolve, reject) => {
-  //     let img = new Image()
-  //     img.onload = () => resolve(img)
-  //     img.onerror = reject
-  //     img.src = src
-  //   })
-  // }
-
-
-  // use shader before call this func
-  static drawQuad(textures) {
-
-    let quadVAO = this.gl.createVertexArray()
-    let quadVBO = this.gl.createBuffer()
-    this.gl.bindVertexArray(quadVAO)
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, quadVBO)
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(quadVertices), this.gl.STATIC_DRAW)
-    this.gl.enableVertexAttribArray(0)
-    this.gl.vertexAttribPointer(0, 3, this.gl.FLOAT, true, 20, 0)
-    this.gl.enableVertexAttribArray(1)
-    this.gl.vertexAttribPointer(1, 2, this.gl.FLOAT, true, 20, 12)
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
-
-    for (i in textures) {
-      this.gl.activeTexture(this.gl.TEXTURE0 + i)
-      this.gl.bindTexture(this.gl.TEXTURE_2D, textures[i])
-    }
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
-    this.gl.bindVertexArray(null)
-  }
-
 }
+
+ArGL.loadImage = loadImage
+FBhelper(ArGL)
+touchInput(ArGL)
+desktopInput(ArGL)
 
 export default ArGL
