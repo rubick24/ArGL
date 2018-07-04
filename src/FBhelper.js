@@ -46,19 +46,10 @@ export default function FBhelper(Argl) {
 
   uniform sampler2D depthMap;
 
-  float near = 0.1;
-  float far  = 10.0;
-
-  float LinearizeDepth(float depth)
-  {
-      float z = depth * 2.0 - 1.0; // back to NDC
-      return (2.0 * near * far) / (far + near - z * (far - near));
-  }
-
   void main()
   {
     float depthValue = texture(depthMap, TexCoord).r;
-    FragColor = vec4(vec3(LinearizeDepth(depthValue) / far), 1.0);
+    FragColor = vec4(vec3(depthValue), 1.0);
   }
   `
   // use shader before call this func

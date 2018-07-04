@@ -2,10 +2,11 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: './test/index.js',
+  mode: 'development',
+  entry: './examples/shadow_map/index.js',
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, '../dist')
+    path: path.resolve(__dirname, './dist')
   },
   module: {
     rules: [
@@ -23,16 +24,14 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'test/index.html'
+      template: 'examples/shadow_map/index.html'
     })
   ],
-  mode: 'development',
   devtool: 'inline-source-map',
   devServer: {
     contentBase: '../dist',
-    // open: true,
+    //open: flase,
     port: 8000,
-    host: '0.0.0.0',
-    overlay: true,
+    overlay: true
   }
 };
