@@ -1,11 +1,11 @@
 {
   "name": "argl",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "main": "src/index.js",
   "author": "申鹏飞",
   "license": "MIT",
   "scripts": {
-    "test": "webpack-dev-server --config ./config/webpack.test.js",
+    "test": "webpack-dev-server --config ./examples/shadow_map/webpack.config.js",
     "build": "webpack --config ./config/webpack.dev.js && webpack --config ./config/webpack.prod.js"
   },
   "dependencies": {
