@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "test": "webpack-dev-server --config ./examples/shadow_map/webpack.config.js",
+    "test:pbr": "webpack-dev-server --config ./examples/pbr/webpack.config.js",
     "build": "webpack --config ./config/webpack.dev.js && webpack --config ./config/webpack.prod.js"
   },
   "dependencies": {
