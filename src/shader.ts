@@ -1,5 +1,11 @@
+import { vec3, vec4, mat3, mat4 } from "gl-matrix";
+import { Mesh } from "webgl-obj-loader";
+
 export default class Shader {
-  constructor(gl, vsSource, fsSource) {
+  gl: WebGL2RenderingContext
+  program: WebGLProgram
+
+  constructor(gl: WebGL2RenderingContext, vsSource: string, fsSource: string) {
     let vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource)
     let fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource)
 
@@ -24,36 +30,31 @@ export default class Shader {
     this.gl.useProgram(this.program)
   }
 
-  setBool(name, value) {
+  setBool(name: string, value: boolean) {
     this.gl.uniform1i(this.gl.getUniformLocation(this.program, name), Number(value))
   }
-  setInt(name, value) {
-    this.gl.uniform1i(this.gl.getUniformLocation(this.program, name), Number(value))
+  setInt(name: string, value: number) {
+    this.gl.uniform1i(this.gl.getUniformLocation(this.program, name), Math.round(Number(value)))
   }
-  setFloat(name, value) {
+  setFloat(name: string, value: number) {
     this.gl.uniform1f(this.gl.getUniformLocation(this.program, name), Number(value))
   }
-  setVec3(name, vec3) {
+  setVec3(name: string, vec3: vec3) {
     this.gl.uniform3fv(this.gl.getUniformLocation(this.program, name), vec3)
   }
-  setVec4(name, vec4) {
+  setVec4(name: string, vec4: vec4) {
     this.gl.uniform4fv(this.gl.getUniformLocation(this.program, name), vec4)
   }
-  setMat3(name, mat3) {
+  setMat3(name: string, mat3: mat3) {
     this.gl.uniformMatrix3fv(this.gl.getUniformLocation(this.program, name), false, mat3)
   }
-  setMat4(name, mat4) {
+  setMat4(name: string, mat4: mat4) {
     this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.program, name), false, mat4)
   }
 
-  // setUniforms(uniforms){
-  //   Object.keys(uniforms).forEach(key=>{
-
-  //   })
-  // }
 }
 
-function loadShader(gl, type, source) {
+function loadShader(gl: WebGL2RenderingContext, type: number, source: string) {
   const shader = gl.createShader(type)
   // Send the source to the shader object
   gl.shaderSource(shader, source)

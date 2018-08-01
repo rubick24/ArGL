@@ -1,4 +1,4 @@
-import { ArGL, Camera, Shader } from './../../src/index'
+import { ArGL, Camera, Shader } from './../../dist/argl'
 import * as glm from 'gl-matrix'
 
 import depthVs from './shader/depth.vs'
@@ -8,6 +8,7 @@ import fs from './shader/shadow_mapping.fs'
 
 import suzanneObj from './assets/suzanne.obj'
 import planeObj from './assets/plane.obj'
+
 
 let width = 960
 let height = 540
@@ -26,12 +27,12 @@ let shadow_depth_shader = new Shader(gl, depthVs, depthFs)
 let shader = new Shader(gl, vs, fs)
 
 let suzanneMesh = argl.loadMesh(suzanneObj)
-suzanneMesh.setVAO(shadow_depth_shader)
-suzanneMesh.setVAO(shader)
+let suzan_sds_vao = argl.setMeshVAO(suzanneMesh, shadow_depth_shader)
+let suzan_s_vao = argl.setMeshVAO(suzanneMesh, shader)
 
 let planeMesh = argl.loadMesh(planeObj)
-planeMesh.setVAO(shadow_depth_shader)
-planeMesh.setVAO(shader)
+let plane_sds_vao = argl.setMeshVAO(planeMesh, shadow_depth_shader)
+let plane_s_vao = argl.setMeshVAO(planeMesh, shader)
 
 
 // create a depth texture.
@@ -63,13 +64,11 @@ shader.use()
 shader.setInt('shadowMap', 0)
 shader.setVec3('u_diffuseColor', [0, 0.5, 1])
 
-
 argl.start()
 
 gl.clearColor(0, 0, 0, 1)
 
 argl.draw = (time) => {
-
 
   processInput()
 
@@ -77,21 +76,18 @@ argl.draw = (time) => {
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-  // let view = camera.getViewMatrix()
-  // let projection = glm.mat4.create()
-  // glm.mat4.perspective(projection, glm.glMatrix.toRadian(camera.zoom), gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100)
 
   shadow_depth_shader.use()
   shadow_depth_shader.setMat4('u_lightSpaceMatrix', lightSpaceMatrix)
   shadow_depth_shader.setMat4('u_model', glm.mat4.create())
 
-  suzanneMesh.draw()
+  argl.drawMesh(suzanneMesh, suzan_sds_vao)
 
   let model = glm.mat4.create()
   glm.mat4.translate(model, model, [0, -1, 0])
   glm.mat4.scale(model, model, [2, 2, 2])
   shadow_depth_shader.setMat4('u_model', model)
-  planeMesh.draw()
+  argl.drawMesh(planeMesh, plane_sds_vao)
   gl.bindFramebuffer(gl.FRAMEBUFFER, null)
   gl.cullFace(gl.BACK)
 
@@ -110,15 +106,11 @@ argl.draw = (time) => {
 
   gl.activeTexture(gl.TEXTURE0)
   gl.bindTexture(gl.TEXTURE_2D, depthTexture)
-  suzanneMesh.draw()
+  argl.drawMesh(suzanneMesh, suzan_s_vao)
+
   shader.setMat4('u_model', model)
-  planeMesh.draw()
+  argl.drawMesh(planeMesh, plane_s_vao)
 
-
-
-  // gl.disable(gl.DEPTH_TEST)
-  // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-  //argl.drawDepth(depthTexture)
 }
 
 
@@ -139,26 +131,26 @@ function processInput() {
     }
 
   } else {
-    if (argl.currentlyPressedKeys['w']) {
+    if (argl.currentlyPressedKeys.get('w')) {
       camera.processMove(Camera.Movement.FORWARD, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys['s']) {
+    if (argl.currentlyPressedKeys.get('s')) {
       camera.processMove(Camera.Movement.BACKWARD, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys['a']) {
+    if (argl.currentlyPressedKeys.get('a')) {
       camera.processMove(Camera.Movement.LEFT, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys['d']) {
+    if (argl.currentlyPressedKeys.get('d')) {
       camera.processMove(Camera.Movement.RIGHT, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys[' ']) {
+    if (argl.currentlyPressedKeys.get(' ')) {
       camera.processMove(Camera.Movement.UP, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys['Shift']) {
+    if (argl.currentlyPressedKeys.get('Shift')) {
       camera.processMove(Camera.Movement.DOWN, argl.deltaTime)
     }
-    camera.processViewAngle(argl.mouseMovement.x, -argl.mouseMovement.y)
-    camera.processMouseScroll(argl.wheelDeltaY)
+    camera.processViewAngle(argl.mouseInput.deltaX, -argl.mouseInput.deltaY)
+    camera.processMouseScroll(argl.mouseInput.wheelDeltaY)
   }
 
 }
