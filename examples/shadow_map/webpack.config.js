@@ -27,7 +27,7 @@ module.exports = {
       template: 'examples/shadow_map/index.html'
     })
   ],
-  devtool: 'inline-source-map',
+  devtool: 'source-map',
   devServer: {
     contentBase: '../dist',
     //open: flase,

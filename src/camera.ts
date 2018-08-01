@@ -1,13 +1,13 @@
 import * as glm from 'gl-matrix';
 
-const CameraMovement = Object.freeze({
-  FORWARD: 1,
-  BACKWARD: 2,
-  LEFT: 3,
-  RIGHT: 4,
-  UP: 5,
-  DOWN: 6
-})
+enum CameraMovement {
+  FORWARD,
+  BACKWARD,
+  LEFT,
+  RIGHT,
+  UP,
+  DOWN
+}
 
 const YAW = -90.0
 const PITCH = 0.0
@@ -16,12 +16,23 @@ const SENSITIVITY = 0.05
 const ZOOM = 45.0
 
 class Camera {
+  position: glm.vec3
+  worldUp: glm.vec3
+  yaw: number
+  pitch: number
+  front: glm.vec3
+  right: glm.vec3
+  up: glm.vec3
+  movementSpeed: number
+  mouseSensitivity: number
+  zoom: number
+  static Movement =  CameraMovement
 
-  constructor(position = [0.0, 0.0, 0.0],
-    up = [0.0, 1.0, 0.0],
+  constructor(position = glm.vec3.fromValues(0, 0, 0),
+    up = glm.vec3.fromValues(0.0, 1.0, 0.0),
     yaw = YAW,
     pitch = PITCH,
-    front = [0.0, 0.0, -1.0],
+    front = glm.vec3.fromValues(0.0, 0.0, -1.0),
     movementSpeed = SPEED,
     mouseSensitivity = SENSITIVITY,
     zoom = ZOOM) {
@@ -30,8 +41,8 @@ class Camera {
     this.yaw = yaw
     this.pitch = pitch
     this.front = front
-    this.right = [1.0, 0.0, 0.0]
-    this.up = [0.0, 1.0, 0.0]
+    this.right = glm.vec3.fromValues(1.0, 0.0, 0.0)
+    this.up = glm.vec3.fromValues(0.0, 1.0, 0.0)
     this.movementSpeed = movementSpeed
     this.mouseSensitivity = mouseSensitivity
     this.zoom = zoom
@@ -46,7 +57,7 @@ class Camera {
     return view
   }
 
-  processMove(direction, deltaTime) {
+  processMove(direction: CameraMovement, deltaTime: number) {
     let velocity = this.movementSpeed * deltaTime
     let temp1 = glm.vec3.create()
 
@@ -76,7 +87,7 @@ class Camera {
     }
   }
 
-  processViewAngle(xoffset, yoffset, constrainPitch = true) {
+  processViewAngle(xoffset: number, yoffset: number, constrainPitch: boolean = true) {
     xoffset *= this.mouseSensitivity
     yoffset *= this.mouseSensitivity
 
@@ -91,7 +102,7 @@ class Camera {
     this.updateCameraVectors()
   }
 
-  processMouseScroll(yoffset) {
+  processMouseScroll(yoffset: number) {
     if (this.zoom >= 1.0 && this.zoom <= 45.0)
       this.zoom -= yoffset / 200
     if (this.zoom <= 1.0)
@@ -117,7 +128,5 @@ class Camera {
   }
 
 }
-
-Camera.Movement = CameraMovement
 
 export default Camera

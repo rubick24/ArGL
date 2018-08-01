@@ -1,4 +1,4 @@
-import { ArGL, Camera, Shader } from './../../src/index'
+import { ArGL, Camera, Shader } from './../../dist/argl'
 import * as glm from 'gl-matrix'
 
 import vs from './shader/pbr.vs'
@@ -29,7 +29,8 @@ let camera = new Camera(glm.vec3.fromValues(0.0, 0.0, 5.0))
 let shader = new Shader(gl, vs, fs)
 
 let suzanneMesh = argl.loadMesh(suzanneObj)
-suzanneMesh.setVAO(shader)
+let suzan_s_vao = argl.setMeshVAO(suzanneMesh, shader)
+
 
 let lightPositions = [
   -10.0, 10.0, 10.0,
@@ -56,7 +57,6 @@ shader.setInt('metallicMap', 2)
 shader.setInt('roughnessMap', 3)
 
 
-
 argl.start()
 
 
@@ -77,7 +77,7 @@ argl.draw = (time)=>{
 
   let model = glm.mat4.create()
   shader.setMat4('u_model', model)
-  suzanneMesh.draw()
+  argl.drawMesh(suzanneMesh, suzan_s_vao)
 
   for (let i = 0; i < lightPositions.length; ++i) {
     let newPos = lightPositions.slice(i * 3, i * 3 + 3)
@@ -89,7 +89,7 @@ argl.draw = (time)=>{
     glm.mat4.scale(model, model, 0.1)
     shader.setMat4('u_model', model)
 
-    suzanneMesh.draw()
+    argl.drawMesh(suzanneMesh)
   }
 }
 
@@ -110,26 +110,26 @@ function processInput() {
     }
 
   } else {
-    if (argl.currentlyPressedKeys['w']) {
+    if (argl.currentlyPressedKeys.get('w')) {
       camera.processMove(Camera.Movement.FORWARD, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys['s']) {
+    if (argl.currentlyPressedKeys.get('s')) {
       camera.processMove(Camera.Movement.BACKWARD, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys['a']) {
+    if (argl.currentlyPressedKeys.get('a')) {
       camera.processMove(Camera.Movement.LEFT, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys['d']) {
+    if (argl.currentlyPressedKeys.get('d')) {
       camera.processMove(Camera.Movement.RIGHT, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys[' ']) {
+    if (argl.currentlyPressedKeys.get(' ')) {
       camera.processMove(Camera.Movement.UP, argl.deltaTime)
     }
-    if (argl.currentlyPressedKeys['Shift']) {
+    if (argl.currentlyPressedKeys.get('Shift')) {
       camera.processMove(Camera.Movement.DOWN, argl.deltaTime)
     }
-    camera.processViewAngle(argl.mouseMovement.x, -argl.mouseMovement.y)
-    camera.processMouseScroll(argl.wheelDeltaY)
+    camera.processViewAngle(argl.mouseInput.deltaX, -argl.mouseInput.deltaY)
+    camera.processMouseScroll(argl.mouseInput.wheelDeltaY)
   }
 
 }

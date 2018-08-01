@@ -91,7 +91,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/index.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/index.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -7422,29 +7422,358 @@ const forEach = (function() {
 
 /***/ }),
 
-/***/ "./src/FBhelper.js":
-/*!*************************!*\
-  !*** ./src/FBhelper.js ***!
-  \*************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ "./src/argl.ts":
+/*!*********************!*\
+  !*** ./src/argl.ts ***!
+  \*********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return FBhelper; });
-/* harmony import */ var _shader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./shader */ "./src/shader.js");
 
-
-function FBhelper(Argl) {
-  const quadVertices = [
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const webgl_obj_loader_1 = __webpack_require__(/*! webgl-obj-loader */ "./node_modules/webgl-obj-loader/dist/webgl-obj-loader.min.js");
+const shader_1 = __webpack_require__(/*! ./shader */ "./src/shader.ts");
+const util_1 = __webpack_require__(/*! ./util */ "./src/util.ts");
+const document = window.document;
+class ArGL {
+    constructor({ width = 300, height = 150, desktopInput = true, touchInput = true } = {}) {
+        this.options = arguments[0];
+        if (desktopInput)
+            this.options.desktopInput = true;
+        if (touchInput)
+            this.options.touchInput = true;
+        this.el = document.createElement('div');
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = width;
+        this.canvas.height = height;
+        // this.el.appendChild(this.canvas)
+        this.loadingBar = document.createElement('progress');
+        this.loadingBar.value = 0;
+        this.loadingBar.max = 100;
+        this.loadingBar.style.width = width + 'px';
+        this.el.appendChild(this.loadingBar);
+        this.resource = {
+            images: []
+        };
+        this.resourceCount = 0;
+        this.loadProgress = [];
+        let self = this;
+        this.loadProgressProxy = new Proxy(this.loadProgress, {
+            set: function (target, key, value, receiver) {
+                let sum = self.loadProgress.reduce((p, v) => { return p + Number(v); }, 0);
+                // console.log('progress: ' + Math.round(sum / self.resourceCount) + '%')
+                if (self.resourceCount !== 0) {
+                    self.loadingBar.value = sum / self.resourceCount;
+                }
+                return Reflect.set(target, key, value, receiver);
+            }
+        });
+        this.gl = this.canvas.getContext('webgl2');
+        if (!this.gl) {
+            console.error('Unable to initialize WebGL2. Your browser or machine may not support it.');
+            return null;
+        }
+        this.deltaTime = 0;
+        this.lastFrame = 0;
+        if (util_1.mobilecheck()) {
+            this.mobile = true;
+        }
+        else {
+            this.mobile = false;
+        }
+        if (desktopInput) {
+            let [currentlyPressedKeys, mouseInput] = ArGL.desktopInput(this.canvas);
+            this.currentlyPressedKeys = currentlyPressedKeys;
+            this.mouseInput = mouseInput;
+        }
+        if (touchInput) {
+            let ongoingTouches = ArGL.touchInput(this.canvas);
+            this.ongoingTouches = ongoingTouches;
+        }
+    }
+    resize() {
+        // 获取浏览器中画布的显示尺寸
+        let displayWidth = this.canvas.clientWidth;
+        let displayHeight = this.canvas.clientHeight;
+        // 检尺寸是否相同
+        if (this.canvas.width != displayWidth ||
+            this.canvas.height != displayHeight) {
+            // 设置为相同的尺寸
+            this.canvas.width = displayWidth;
+            this.canvas.height = displayHeight;
+        }
+        this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
+    }
+    draw(time) { }
+    started() { }
+    render(time) {
+        this.deltaTime = time - this.lastFrame;
+        this.lastFrame = time;
+        this.resize();
+        this.draw(time);
+        if (this.options.touchInput) {
+            for (let i in this.ongoingTouches) {
+                this.ongoingTouches[i].deltaX = 0;
+                this.ongoingTouches[i].deltaY = 0;
+            }
+        }
+        if (this.options.desktopInput) {
+            this.mouseInput.deltaX = 0;
+            this.mouseInput.deltaY = 0;
+            this.mouseInput.wheelDeltaY = 0;
+        }
+        requestAnimationFrame(this.render.bind(this));
+    }
+    loadMesh(objString) {
+        let mesh = new webgl_obj_loader_1.Mesh(objString);
+        webgl_obj_loader_1.initMeshBuffers(this.gl, mesh);
+        return mesh;
+    }
+    setMeshVAO(mesh, shader) {
+        let a_position = this.gl.getAttribLocation(shader.program, 'a_position');
+        let a_texCoord = this.gl.getAttribLocation(shader.program, 'a_texCoord');
+        let a_normal = this.gl.getAttribLocation(shader.program, 'a_normal');
+        let vao = this.gl.createVertexArray();
+        this.gl.bindVertexArray(vao);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, mesh.vertexBuffer);
+        this.gl.vertexAttribPointer(a_position, 3, this.gl.FLOAT, false, 0, 0);
+        this.gl.enableVertexAttribArray(a_position);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, mesh.textureBuffer);
+        this.gl.vertexAttribPointer(a_texCoord, 2, this.gl.FLOAT, false, 0, 0);
+        this.gl.enableVertexAttribArray(a_texCoord);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, mesh.normalBuffer);
+        this.gl.vertexAttribPointer(a_normal, 3, this.gl.FLOAT, false, 0, 0);
+        this.gl.enableVertexAttribArray(a_normal);
+        this.gl.bindVertexArray(null);
+        return vao;
+    }
+    drawMesh(mesh, vao) {
+        this.gl.bindVertexArray(vao);
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+        this.gl.drawElements(this.gl.TRIANGLES, mesh.indexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
+        this.gl.bindVertexArray(null);
+    }
+    start() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let textures = yield this.loadTexture();
+            this.loadingBar.remove();
+            this.el.appendChild(this.canvas);
+            this.render(this.lastFrame);
+            this.textures = textures;
+            this.started();
+        });
+    }
+    setImageResource(images) {
+        this.resource.images = images;
+    }
+    loadTexture() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let textures = [];
+            this.resourceCount += this.resource.images.length;
+            let promises = this.resource.images.map((element, index) => {
+                return ArGL.loadImage(element, (ratio) => {
+                    this.loadProgressProxy[index] = ratio;
+                });
+            });
+            let loadedImgs = yield Promise.all(promises);
+            this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+            loadedImgs.forEach((element, index) => {
+                textures[index] = this.gl.createTexture();
+                this.gl.activeTexture(this.gl.TEXTURE0 + index);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, textures[index]);
+                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, element);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+            });
+            return textures;
+        });
+    }
+    drawQuad(textures) {
+        // self.gl.bindVertexArray(null)
+        if (this.quadVAO === undefined) {
+            this.quadVAO = this.gl.createVertexArray();
+            let quadVBO = this.gl.createBuffer();
+            this.gl.bindVertexArray(this.quadVAO);
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, quadVBO);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(ArGL.quadVertices), this.gl.STATIC_DRAW);
+            this.gl.enableVertexAttribArray(0);
+            this.gl.vertexAttribPointer(0, 3, this.gl.FLOAT, true, 20, 0);
+            this.gl.enableVertexAttribArray(1);
+            this.gl.vertexAttribPointer(1, 2, this.gl.FLOAT, true, 20, 12);
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+            this.gl.bindVertexArray(null);
+        }
+        this.gl.bindVertexArray(this.quadVAO);
+        if (textures.length === 1) {
+            this.gl.bindTexture(this.gl.TEXTURE_2D, textures[0]);
+        }
+        else {
+            for (let i in textures) {
+                this.gl.activeTexture(this.gl.TEXTURE0 + Number(i));
+                this.gl.bindTexture(this.gl.TEXTURE_2D, textures[i]);
+            }
+        }
+        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+        this.gl.bindVertexArray(null);
+    }
+    drawFB(texture) {
+        if (this.fbShader === undefined) {
+            this.fbShader = new shader_1.default(this.gl, ArGL.fbvs, ArGL.fbfs);
+        }
+        this.fbShader.use();
+        this.fbShader.setInt('scene', 0);
+        this.drawQuad([texture]);
+    }
+    drawDepth(texture) {
+        if (this.fbShader === undefined) {
+            this.fbShader = new shader_1.default(this.gl, ArGL.fbvs, ArGL.depthFS);
+        }
+        this.fbShader.use();
+        this.fbShader.setInt('depthMap', 0);
+        this.drawQuad([texture]);
+    }
+    static desktopInput(el) {
+        let currentlyPressedKeys = new Map();
+        let mouseInput = {
+            deltaX: 0,
+            deltaY: 0,
+            wheelDeltaY: 0
+        };
+        el.requestPointerLock = el.requestPointerLock ||
+            el.mozRequestPointerLock;
+        el.exitPointerLock = el.exitPointerLock ||
+            el.mozExitPointerLock;
+        el.onclick = function () {
+            el.requestPointerLock();
+        };
+        document.addEventListener('pointerlockchange', handleLockChange, false);
+        document.addEventListener('mozpointerlockchange', handleLockChange, false);
+        function handleKeyDown(e) {
+            currentlyPressedKeys.set(e.key, true);
+        }
+        function handleKeyUp(e) {
+            currentlyPressedKeys.set(e.key, false);
+        }
+        function mouse_callback(e) {
+            mouseInput.deltaX = e.movementX || 0;
+            mouseInput.deltaY = e.movementY || 0;
+        }
+        function wheel_callback(e) {
+            mouseInput.wheelDeltaY = e.wheelDeltaY;
+        }
+        function handleLockChange() {
+            if (document.pointerLockElement === el ||
+                document.mozPointerLockElement === el) {
+                document.addEventListener('keydown', handleKeyDown);
+                document.addEventListener('keyup', handleKeyUp);
+                document.addEventListener('mousemove', mouse_callback);
+                document.addEventListener('wheel', wheel_callback);
+            }
+            else {
+                document.removeEventListener('keydown', handleKeyDown);
+                document.removeEventListener('keyup', handleKeyUp);
+                document.removeEventListener('mousemove', mouse_callback);
+                document.removeEventListener('wheel', wheel_callback);
+            }
+        }
+        return [currentlyPressedKeys, mouseInput];
+    }
+    static touchInput(el) {
+        const ongoingTouches = [];
+        // 移动端横屏 应在具体应用中实现
+        //-----------
+        // let tip = document.createElement('span')
+        // tip.innerText = '横屏以获取最佳体验'
+        // //screen.width screen.height
+        // //window.innerHeight  window.innerWidth
+        // function detectOrient(){
+        //   if (screen.orientation.angle % 180 === 0) {
+        //     self.el.appendChild(tip)
+        //     el.width = Math.min(self.options.width, screen.width-16)
+        //     el.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight) -16)
+        //   } else {
+        //     tip.remove()
+        //     el.width = Math.min(self.options.width, screen.width-16)
+        //     el.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight)  -16)
+        //   }
+        // }
+        // detectOrient()
+        // window.addEventListener('orientationchange',detectOrient)
+        el.addEventListener("touchstart", handleStart, false);
+        el.addEventListener("touchend", handleEnd, false);
+        el.addEventListener("touchmove", handleMove, false);
+        function handleStart(e) {
+            e.preventDefault();
+            let touches = e.changedTouches;
+            for (let i = 0; i < touches.length; i++) {
+                let touch = {
+                    pageX: touches[i].pageX,
+                    pageY: touches[i].pageY,
+                    startX: touches[i].pageX,
+                    startY: touches[i].pageY,
+                    deltaX: 0,
+                    deltaY: 0,
+                    identifier: touches[i].identifier
+                };
+                ongoingTouches.push(touch);
+            }
+        }
+        function handleEnd(e) {
+            e.preventDefault();
+            let touches = e.changedTouches;
+            for (let i = 0; i < touches.length; i++) {
+                let idx = ongoingTouchIndexById(touches[i].identifier);
+                ongoingTouches.splice(idx, 1);
+            }
+        }
+        function handleMove(e) {
+            e.preventDefault();
+            let touches = e.changedTouches;
+            for (let i = 0; i < touches.length; i++) {
+                let idx = ongoingTouchIndexById(touches[i].identifier);
+                let touch = {
+                    pageX: touches[i].pageX,
+                    pageY: touches[i].pageY,
+                    startX: ongoingTouches[idx].startX,
+                    startY: ongoingTouches[idx].startY,
+                    deltaX: touches[i].pageX - ongoingTouches[idx].pageX,
+                    deltaY: touches[i].pageY - ongoingTouches[idx].pageY,
+                    identifier: touches[i].identifier
+                };
+                ongoingTouches.splice(idx, 1, touch); // swap in the new touch record
+            }
+        }
+        function ongoingTouchIndexById(idToFind) {
+            for (let i = 0; i < ongoingTouches.length; i++) {
+                let id = ongoingTouches[i].identifier;
+                if (id === idToFind) {
+                    return i;
+                }
+            }
+            return -1; // not found
+        }
+        return ongoingTouches;
+    }
+}
+ArGL.loadImage = util_1.loadImage;
+ArGL.quadVertices = [
     // positions   // texture Coords
     -1.0, 1.0, 0.0, 0.0, 1.0,
     -1.0, -1.0, 0.0, 0.0, 0.0,
     1.0, 1.0, 0.0, 1.0, 1.0,
     1.0, -1.0, 0.0, 1.0, 0.0,
-  ]
-
-  const fbvs = `#version 300 es
+];
+ArGL.fbvs = `#version 300 es
 
   layout (location = 0) in vec3 a_position;
   layout (location = 1) in vec2 a_texCoord;
@@ -7456,9 +7785,8 @@ function FBhelper(Argl) {
       TexCoord = a_texCoord;
       gl_Position = vec4(a_position, 1.0);
   }
-  `
-
-  const fbfs = `#version 300 es
+  `;
+ArGL.fbfs = `#version 300 es
 
   precision mediump float;
 
@@ -7471,8 +7799,8 @@ function FBhelper(Argl) {
   {
     FragColor = texture(scene, TexCoord);
   }
-  `
-  const depthFS = `#version 300 es
+  `;
+ArGL.depthFS = `#version 300 es
 
   precision mediump float;
 
@@ -7486,741 +7814,281 @@ function FBhelper(Argl) {
     float depthValue = texture(depthMap, TexCoord).r;
     FragColor = vec4(vec3(depthValue), 1.0);
   }
-  `
-  // use shader before call this func
-  Argl.prototype.drawQuad = function (textures) {
-    // self.gl.bindVertexArray(null)
-    if (this.quadVAO === undefined) {
-      this.quadVAO = this.gl.createVertexArray()
-      let quadVBO = this.gl.createBuffer()
-      this.gl.bindVertexArray(this.quadVAO)
-      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, quadVBO)
-      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(quadVertices), this.gl.STATIC_DRAW)
-      this.gl.enableVertexAttribArray(0)
-      this.gl.vertexAttribPointer(0, 3, this.gl.FLOAT, true, 20, 0)
-      this.gl.enableVertexAttribArray(1)
-      this.gl.vertexAttribPointer(1, 2, this.gl.FLOAT, true, 20, 12)
-      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
-      this.gl.bindVertexArray(null)
-
-    }
-
-    this.gl.bindVertexArray(this.quadVAO)
-    if (textures.length === 1) {
-      this.gl.bindTexture(this.gl.TEXTURE_2D, textures[0])
-    } else {
-      for (let i in textures) {
-        this.gl.activeTexture(this.gl.TEXTURE0 + i)
-        this.gl.bindTexture(this.gl.TEXTURE_2D, textures[i])
-      }
-    }
-
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4)
-    this.gl.bindVertexArray(null)
-  }
-
-  Argl.prototype.drawFB = function (texture) {
-    if (this.fbShader === undefined) {
-      this.fbShader = new _shader__WEBPACK_IMPORTED_MODULE_0__["default"](this.gl, fbvs, fbfs)
-    }
-    this.fbShader.use()
-    this.fbShader.setInt('scene', 0)
-    this.drawQuad([texture])
-  }
-
-  Argl.prototype.drawDepth = function (texture) {
-    if (this.fbShader === undefined) {
-      this.fbShader = new _shader__WEBPACK_IMPORTED_MODULE_0__["default"](this.gl, fbvs, depthFS)
-    }
-    this.fbShader.use()
-    this.fbShader.setInt('depthMap', 0)
-    this.drawQuad([texture])
-  }
-}
+  `;
+exports.default = ArGL;
 
 
 /***/ }),
 
-/***/ "./src/argl.js":
-/*!*********************!*\
-  !*** ./src/argl.js ***!
-  \*********************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var webgl_obj_loader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! webgl-obj-loader */ "./node_modules/webgl-obj-loader/dist/webgl-obj-loader.min.js");
-/* harmony import */ var webgl_obj_loader__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(webgl_obj_loader__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _FBhelper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./FBhelper */ "./src/FBhelper.js");
-/* harmony import */ var _touchInput__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./touchInput */ "./src/touchInput.js");
-/* harmony import */ var _desktopInput__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./desktopInput */ "./src/desktopInput.js");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util */ "./src/util.js");
-
-
-
-
-
-
-
-class ArGL {
-  constructor({ width, height } = {
-    width: 300,
-    height: 150
-  }) {
-    this.el = document.createElement('div')
-    this.canvas = document.createElement('canvas')
-
-    this.canvas.width = width
-    this.canvas.height = height
-    // this.el.appendChild(this.canvas)
-
-    this.loadingBar = document.createElement('progress')
-    this.loadingBar.value = 0
-    this.loadingBar.max = 100
-    this.loadingBar.style.width = width + 'px'
-    this.el.appendChild(this.loadingBar)
-
-    this.resource = {}
-    this.resource.images = []
-    this.resourceCount = 0
-    this.loadProgress = []
-    let self = this
-    this.loadProgressProxy = new Proxy(this.loadProgress, {
-      set: function (target, key, value, receiver) {
-        let sum = self.loadProgress.reduce((p, v) => { return p + v }, 0)
-        // console.log('progress: ' + Math.round(sum / self.resourceCount) + '%')
-        if (self.resourceCount !== 0) {
-          self.loadingBar.value = sum / self.resourceCount
-        }
-        return Reflect.set(target, key, value, receiver)
-      }
-    })
-
-    this.options = arguments[0]
-    this.gl = this.canvas.getContext('webgl2')
-    if (!this.gl) {
-      console.error('Unable to initialize WebGL2. Your browser or machine may not support it.')
-      return null
-    }
-
-    this.deltaTime = 0
-    this.lastFrame = 0
-
-    if (Object(_util__WEBPACK_IMPORTED_MODULE_4__["mobilecheck"])()) {
-      this.addTouchInput()
-    } else {
-      this.addDesktopInput()
-    }
-  }
-
-  resize() {
-    // 获取浏览器中画布的显示尺寸
-    let displayWidth = this.canvas.clientWidth
-    let displayHeight = this.canvas.clientHeight
-
-    // 检尺寸是否相同
-    if (this.canvas.width != displayWidth ||
-      this.canvas.height != displayHeight) {
-
-      // 设置为相同的尺寸
-      this.canvas.width = displayWidth
-      this.canvas.height = displayHeight
-    }
-
-    this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height)
-  }
-
-  draw() { }
-  started() { }
-
-  render(time) {
-    this.deltaTime = time - this.lastFrame
-    this.lastFrame = time
-    this.resize()
-    this.draw(time)
-
-    if (this.mobile) {
-      for (let i in this.ongoingTouches) {
-        this.ongoingTouches[i].deltaX = 0
-        this.ongoingTouches[i].deltaY = 0
-      }
-    } else {
-      this.mouseMovement.x = 0
-      this.mouseMovement.y = 0
-      this.wheelDeltaY = 0
-    }
-    requestAnimationFrame(this.render.bind(this))
-  }
-
-
-  loadMesh(objString) {
-    let mesh = new webgl_obj_loader__WEBPACK_IMPORTED_MODULE_0__["Mesh"](objString)
-    Object(webgl_obj_loader__WEBPACK_IMPORTED_MODULE_0__["initMeshBuffers"])(this.gl, mesh)
-
-    let self = this
-    mesh.setVAO = function (shader) {
-      this.a_position = self.gl.getAttribLocation(shader.program, 'a_position')
-      this.a_texCoord = self.gl.getAttribLocation(shader.program, 'a_texCoord')
-      this.a_normal = self.gl.getAttribLocation(shader.program, 'a_normal')
-
-      this.vao = self.gl.createVertexArray()
-      self.gl.bindVertexArray(this.vao)
-
-      self.gl.bindBuffer(self.gl.ARRAY_BUFFER, this.vertexBuffer)
-      self.gl.vertexAttribPointer(this.a_position, 3, self.gl.FLOAT, false, 0, 0)
-      self.gl.enableVertexAttribArray(this.a_position)
-      self.gl.bindBuffer(self.gl.ARRAY_BUFFER, this.textureBuffer)
-      self.gl.vertexAttribPointer(this.a_texCoord, 2, self.gl.FLOAT, false, 0, 0)
-      self.gl.enableVertexAttribArray(this.a_texCoord)
-      self.gl.bindBuffer(self.gl.ARRAY_BUFFER, this.normalBuffer)
-      self.gl.vertexAttribPointer(this.a_normal, 3, self.gl.FLOAT, false, 0, 0)
-      self.gl.enableVertexAttribArray(this.a_normal)
-
-      self.gl.bindVertexArray(null)
-    }
-    mesh.draw = function () {
-      self.gl.bindVertexArray(this.vao)
-      self.gl.bindBuffer(self.gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
-      self.gl.drawElements(self.gl.TRIANGLES, mesh.indexBuffer.numItems, self.gl.UNSIGNED_SHORT, 0)
-      self.gl.bindVertexArray(null)
-    }
-
-    return mesh
-  }
-
-  async start() {
-    let textures = await this.loadTexture()
-
-    this.loadingBar.remove()
-    this.el.appendChild(this.canvas)
-    this.render()
-    this.textures = textures
-    this.started()
-  }
-
-  setImageResource(images) {
-    this.resource.images = images
-  }
-
-  async loadTexture() {
-    let textures = []
-    this.resourceCount += this.resource.images.length
-    let promises = this.resource.images.map((element, index) => {
-      return ArGL.loadImage(element, (ratio) => {
-        this.loadProgressProxy[index] = ratio
-      })
-    })
-
-    let loadedImgs = await Promise.all(promises)
-    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true)
-    loadedImgs.forEach((element, index) => {
-      textures[index] = this.gl.createTexture()
-      this.gl.activeTexture(this.gl.TEXTURE0 + index)
-      this.gl.bindTexture(this.gl.TEXTURE_2D, textures[index])
-      this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, element)
-      this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE)
-      this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE)
-      this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR)
-    })
-
-    return textures
-
-  }
-
-}
-
-ArGL.loadImage = _util__WEBPACK_IMPORTED_MODULE_4__["loadImage"]
-Object(_FBhelper__WEBPACK_IMPORTED_MODULE_1__["default"])(ArGL)
-Object(_touchInput__WEBPACK_IMPORTED_MODULE_2__["default"])(ArGL)
-Object(_desktopInput__WEBPACK_IMPORTED_MODULE_3__["default"])(ArGL)
-
-/* harmony default export */ __webpack_exports__["default"] = (ArGL);
-
-
-/***/ }),
-
-/***/ "./src/camera.js":
+/***/ "./src/camera.ts":
 /*!***********************!*\
-  !*** ./src/camera.js ***!
+  !*** ./src/camera.ts ***!
   \***********************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var gl_matrix__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/src/gl-matrix.js");
 
-
-const CameraMovement = Object.freeze({
-  FORWARD: 1,
-  BACKWARD: 2,
-  LEFT: 3,
-  RIGHT: 4,
-  UP: 5,
-  DOWN: 6
-})
-
-const YAW = -90.0
-const PITCH = 0.0
-const SPEED = 0.005
-const SENSITIVITY = 0.05
-const ZOOM = 45.0
-
+Object.defineProperty(exports, "__esModule", { value: true });
+const glm = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/src/gl-matrix.js");
+var CameraMovement;
+(function (CameraMovement) {
+    CameraMovement[CameraMovement["FORWARD"] = 0] = "FORWARD";
+    CameraMovement[CameraMovement["BACKWARD"] = 1] = "BACKWARD";
+    CameraMovement[CameraMovement["LEFT"] = 2] = "LEFT";
+    CameraMovement[CameraMovement["RIGHT"] = 3] = "RIGHT";
+    CameraMovement[CameraMovement["UP"] = 4] = "UP";
+    CameraMovement[CameraMovement["DOWN"] = 5] = "DOWN";
+})(CameraMovement || (CameraMovement = {}));
+const YAW = -90.0;
+const PITCH = 0.0;
+const SPEED = 0.005;
+const SENSITIVITY = 0.05;
+const ZOOM = 45.0;
 class Camera {
-
-  constructor(position = [0.0, 0.0, 0.0],
-    up = [0.0, 1.0, 0.0],
-    yaw = YAW,
-    pitch = PITCH,
-    front = [0.0, 0.0, -1.0],
-    movementSpeed = SPEED,
-    mouseSensitivity = SENSITIVITY,
-    zoom = ZOOM) {
-    this.position = position
-    this.worldUp = up
-    this.yaw = yaw
-    this.pitch = pitch
-    this.front = front
-    this.right = [1.0, 0.0, 0.0]
-    this.up = [0.0, 1.0, 0.0]
-    this.movementSpeed = movementSpeed
-    this.mouseSensitivity = mouseSensitivity
-    this.zoom = zoom
-    this.updateCameraVectors()
-  }
-
-  getViewMatrix() {
-    let view = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["mat4"].create()
-    let center = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].create()
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].add(center, this.position, this.front)
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["mat4"].lookAt(view, this.position, center, this.up)
-    return view
-  }
-
-  processMove(direction, deltaTime) {
-    let velocity = this.movementSpeed * deltaTime
-    let temp1 = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].create()
-
-    if (direction == CameraMovement.FORWARD) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].scale(temp1, this.front, velocity)
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].add(this.position, this.position, temp1)
+    constructor(position = glm.vec3.fromValues(0, 0, 0), up = glm.vec3.fromValues(0.0, 1.0, 0.0), yaw = YAW, pitch = PITCH, front = glm.vec3.fromValues(0.0, 0.0, -1.0), movementSpeed = SPEED, mouseSensitivity = SENSITIVITY, zoom = ZOOM) {
+        this.position = position;
+        this.worldUp = up;
+        this.yaw = yaw;
+        this.pitch = pitch;
+        this.front = front;
+        this.right = glm.vec3.fromValues(1.0, 0.0, 0.0);
+        this.up = glm.vec3.fromValues(0.0, 1.0, 0.0);
+        this.movementSpeed = movementSpeed;
+        this.mouseSensitivity = mouseSensitivity;
+        this.zoom = zoom;
+        this.updateCameraVectors();
     }
-    if (direction == CameraMovement.BACKWARD) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].scale(temp1, this.front, velocity)
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].sub(this.position, this.position, temp1)
+    getViewMatrix() {
+        let view = glm.mat4.create();
+        let center = glm.vec3.create();
+        glm.vec3.add(center, this.position, this.front);
+        glm.mat4.lookAt(view, this.position, center, this.up);
+        return view;
     }
-    if (direction == CameraMovement.LEFT) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].scale(temp1, this.right, velocity)
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].sub(this.position, this.position, temp1)
+    processMove(direction, deltaTime) {
+        let velocity = this.movementSpeed * deltaTime;
+        let temp1 = glm.vec3.create();
+        if (direction == CameraMovement.FORWARD) {
+            glm.vec3.scale(temp1, this.front, velocity);
+            glm.vec3.add(this.position, this.position, temp1);
+        }
+        if (direction == CameraMovement.BACKWARD) {
+            glm.vec3.scale(temp1, this.front, velocity);
+            glm.vec3.sub(this.position, this.position, temp1);
+        }
+        if (direction == CameraMovement.LEFT) {
+            glm.vec3.scale(temp1, this.right, velocity);
+            glm.vec3.sub(this.position, this.position, temp1);
+        }
+        if (direction == CameraMovement.RIGHT) {
+            glm.vec3.scale(temp1, this.right, velocity);
+            glm.vec3.add(this.position, this.position, temp1);
+        }
+        if (direction == CameraMovement.UP) {
+            glm.vec3.scale(temp1, this.up, velocity);
+            glm.vec3.add(this.position, this.position, temp1);
+        }
+        if (direction == CameraMovement.DOWN) {
+            glm.vec3.scale(temp1, this.up, velocity);
+            glm.vec3.sub(this.position, this.position, temp1);
+        }
     }
-    if (direction == CameraMovement.RIGHT) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].scale(temp1, this.right, velocity)
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].add(this.position, this.position, temp1)
+    processViewAngle(xoffset, yoffset, constrainPitch = true) {
+        xoffset *= this.mouseSensitivity;
+        yoffset *= this.mouseSensitivity;
+        this.yaw += xoffset;
+        this.pitch += yoffset;
+        if (constrainPitch) {
+            if (this.pitch > 89.0)
+                this.pitch = 89.0;
+            if (this.pitch < -89.0)
+                this.pitch = -89.0;
+        }
+        this.updateCameraVectors();
     }
-    if (direction == CameraMovement.UP) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].scale(temp1, this.up, velocity)
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].add(this.position, this.position, temp1)
+    processMouseScroll(yoffset) {
+        if (this.zoom >= 1.0 && this.zoom <= 45.0)
+            this.zoom -= yoffset / 200;
+        if (this.zoom <= 1.0)
+            this.zoom = 1.0;
+        if (this.zoom >= 45.0)
+            this.zoom = 45.0;
     }
-    if (direction == CameraMovement.DOWN) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].scale(temp1, this.up, velocity)
-      gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].sub(this.position, this.position, temp1)
+    updateCameraVectors() {
+        let front = glm.vec3.create();
+        front[0] = Math.cos(glm.glMatrix.toRadian(this.yaw)) * Math.cos(glm.glMatrix.toRadian(this.pitch));
+        front[1] = Math.sin(glm.glMatrix.toRadian(this.pitch));
+        front[2] = Math.sin(glm.glMatrix.toRadian(this.yaw)) * Math.cos(glm.glMatrix.toRadian(this.pitch));
+        glm.vec3.normalize(this.front, front);
+        let right = glm.vec3.create();
+        glm.vec3.cross(right, this.front, this.worldUp);
+        glm.vec3.normalize(this.right, right);
+        let up = glm.vec3.create();
+        glm.vec3.cross(up, this.right, this.front);
+        glm.vec3.normalize(this.up, up);
     }
-  }
-
-  processViewAngle(xoffset, yoffset, constrainPitch = true) {
-    xoffset *= this.mouseSensitivity
-    yoffset *= this.mouseSensitivity
-
-    this.yaw += xoffset
-    this.pitch += yoffset
-    if (constrainPitch) {
-      if (this.pitch > 89.0)
-        this.pitch = 89.0
-      if (this.pitch < -89.0)
-        this.pitch = -89.0
-    }
-    this.updateCameraVectors()
-  }
-
-  processMouseScroll(yoffset) {
-    if (this.zoom >= 1.0 && this.zoom <= 45.0)
-      this.zoom -= yoffset / 200
-    if (this.zoom <= 1.0)
-      this.zoom = 1.0
-    if (this.zoom >= 45.0)
-      this.zoom = 45.0
-  }
-
-  updateCameraVectors() {
-    let front = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].create()
-    front[0] = Math.cos(gl_matrix__WEBPACK_IMPORTED_MODULE_0__["glMatrix"].toRadian(this.yaw)) * Math.cos(gl_matrix__WEBPACK_IMPORTED_MODULE_0__["glMatrix"].toRadian(this.pitch))
-    front[1] = Math.sin(gl_matrix__WEBPACK_IMPORTED_MODULE_0__["glMatrix"].toRadian(this.pitch))
-    front[2] = Math.sin(gl_matrix__WEBPACK_IMPORTED_MODULE_0__["glMatrix"].toRadian(this.yaw)) * Math.cos(gl_matrix__WEBPACK_IMPORTED_MODULE_0__["glMatrix"].toRadian(this.pitch))
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].normalize(this.front, front)
-
-    let right = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].create()
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].cross(right, this.front, this.worldUp)
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].normalize(this.right, right)
-
-    let up = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].create()
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].cross(up, this.right, this.front)
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].normalize(this.up, up)
-  }
-
 }
-
-Camera.Movement = CameraMovement
-
-/* harmony default export */ __webpack_exports__["default"] = (Camera);
+Camera.Movement = CameraMovement;
+exports.default = Camera;
 
 
 /***/ }),
 
-/***/ "./src/desktopInput.js":
-/*!*****************************!*\
-  !*** ./src/desktopInput.js ***!
-  \*****************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return desktopInput; });
-function desktopInput(Argl) {
-
-  Argl.prototype.addDesktopInput = function () {
-    this.mobile = false
-    this.currentlyPressedKeys = {}
-    this.mouseMovement = {
-      x: 0,
-      y: 0
-    }
-    this.wheelDeltaY = 0
-
-    let self = this
-
-    this.canvas.requestPointerLock = this.canvas.requestPointerLock ||
-      this.canvas.mozRequestPointerLock
-    this.canvas.exitPointerLock = this.canvas.exitPointerLock ||
-      this.canvas.mozExitPointerLock
-    this.canvas.onclick = function () {
-      self.canvas.requestPointerLock()
-    }
-    document.addEventListener('pointerlockchange', handleLockChange, false)
-    document.addEventListener('mozpointerlockchange', handleLockChange, false)
-
-    function handleKeyDown(e) {
-      self.currentlyPressedKeys[e.key] = true
-    }
-    function handleKeyUp(e) {
-      self.currentlyPressedKeys[e.key] = false
-    }
-    function mouse_callback(e) {
-      self.mouseMovement.x = e.movementX || 0
-      self.mouseMovement.y = e.movementY || 0
-    }
-    function wheel_callback(e) {
-      self.wheelDeltaY = e.wheelDeltaY
-    }
-
-    function handleLockChange() {
-      if (document.pointerLockElement === self.canvas ||
-        document.mozPointerLockElement === self.canvas) {
-        document.addEventListener('keydown', handleKeyDown)
-        document.addEventListener('keyup', handleKeyUp)
-        document.addEventListener('mousemove', mouse_callback)
-        document.addEventListener('wheel', wheel_callback)
-      } else {
-        document.removeEventListener('keydown', handleKeyDown)
-        document.removeEventListener('keyup', handleKeyUp)
-        document.removeEventListener('mousemove', mouse_callback)
-        document.removeEventListener('wheel', wheel_callback)
-      }
-
-    }
-  }
-}
-
-
-/***/ }),
-
-/***/ "./src/index.js":
+/***/ "./src/index.ts":
 /*!**********************!*\
-  !*** ./src/index.js ***!
+  !*** ./src/index.ts ***!
   \**********************/
-/*! exports provided: Camera, Shader, ArGL, default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _argl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./argl */ "./src/argl.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ArGL", function() { return _argl__WEBPACK_IMPORTED_MODULE_0__["default"]; });
 
-/* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./camera */ "./src/camera.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Camera", function() { return _camera__WEBPACK_IMPORTED_MODULE_1__["default"]; });
-
-/* harmony import */ var _shader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shader */ "./src/shader.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Shader", function() { return _shader__WEBPACK_IMPORTED_MODULE_2__["default"]; });
-
-
-
-
-
-
-/* harmony default export */ __webpack_exports__["default"] = (_argl__WEBPACK_IMPORTED_MODULE_0__["default"]);
+Object.defineProperty(exports, "__esModule", { value: true });
+const argl_1 = __webpack_require__(/*! ./argl */ "./src/argl.ts");
+exports.ArGL = argl_1.default;
+const camera_1 = __webpack_require__(/*! ./camera */ "./src/camera.ts");
+exports.Camera = camera_1.default;
+const shader_1 = __webpack_require__(/*! ./shader */ "./src/shader.ts");
+exports.Shader = shader_1.default;
+exports.default = argl_1.default;
 
 
 /***/ }),
 
-/***/ "./src/shader.js":
+/***/ "./src/shader.ts":
 /*!***********************!*\
-  !*** ./src/shader.js ***!
+  !*** ./src/shader.ts ***!
   \***********************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Shader; });
+
+Object.defineProperty(exports, "__esModule", { value: true });
 class Shader {
-  constructor(gl, vsSource, fsSource) {
-    let vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource)
-    let fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource)
-
-    // 创建着色器程序
-    let shaderProgram = gl.createProgram()
-    gl.attachShader(shaderProgram, vertexShader)
-    gl.attachShader(shaderProgram, fragmentShader)
-    gl.linkProgram(shaderProgram)
-    gl.deleteShader(vertexShader)
-    gl.deleteShader(fragmentShader)
-    // 创建失败
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      console.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram))
-      return null
+    constructor(gl, vsSource, fsSource) {
+        let vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+        let fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+        // 创建着色器程序
+        let shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertexShader);
+        gl.attachShader(shaderProgram, fragmentShader);
+        gl.linkProgram(shaderProgram);
+        gl.deleteShader(vertexShader);
+        gl.deleteShader(fragmentShader);
+        // 创建失败
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+            console.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+            return null;
+        }
+        this.gl = gl;
+        this.program = shaderProgram;
     }
-
-    this.gl = gl
-    this.program = shaderProgram
-  }
-
-  use() {
-    this.gl.useProgram(this.program)
-  }
-
-  setBool(name, value) {
-    this.gl.uniform1i(this.gl.getUniformLocation(this.program, name), Number(value))
-  }
-  setInt(name, value) {
-    this.gl.uniform1i(this.gl.getUniformLocation(this.program, name), Number(value))
-  }
-  setFloat(name, value) {
-    this.gl.uniform1f(this.gl.getUniformLocation(this.program, name), Number(value))
-  }
-  setVec3(name, vec3) {
-    this.gl.uniform3fv(this.gl.getUniformLocation(this.program, name), vec3)
-  }
-  setVec4(name, vec4) {
-    this.gl.uniform4fv(this.gl.getUniformLocation(this.program, name), vec4)
-  }
-  setMat3(name, mat3) {
-    this.gl.uniformMatrix3fv(this.gl.getUniformLocation(this.program, name), false, mat3)
-  }
-  setMat4(name, mat4) {
-    this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.program, name), false, mat4)
-  }
-
-  // setUniforms(uniforms){
-  //   Object.keys(uniforms).forEach(key=>{
-
-  //   })
-  // }
+    use() {
+        this.gl.useProgram(this.program);
+    }
+    setBool(name, value) {
+        this.gl.uniform1i(this.gl.getUniformLocation(this.program, name), Number(value));
+    }
+    setInt(name, value) {
+        this.gl.uniform1i(this.gl.getUniformLocation(this.program, name), Math.round(Number(value)));
+    }
+    setFloat(name, value) {
+        this.gl.uniform1f(this.gl.getUniformLocation(this.program, name), Number(value));
+    }
+    setVec3(name, vec3) {
+        this.gl.uniform3fv(this.gl.getUniformLocation(this.program, name), vec3);
+    }
+    setVec4(name, vec4) {
+        this.gl.uniform4fv(this.gl.getUniformLocation(this.program, name), vec4);
+    }
+    setMat3(name, mat3) {
+        this.gl.uniformMatrix3fv(this.gl.getUniformLocation(this.program, name), false, mat3);
+    }
+    setMat4(name, mat4) {
+        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.program, name), false, mat4);
+    }
 }
-
+exports.default = Shader;
 function loadShader(gl, type, source) {
-  const shader = gl.createShader(type)
-  // Send the source to the shader object
-  gl.shaderSource(shader, source)
-  // Compile the shader program
-  gl.compileShader(shader)
-  // See if it compiled successfully
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader))
-    gl.deleteShader(shader)
-    return null
-  }
-  return shader
+    const shader = gl.createShader(type);
+    // Send the source to the shader object
+    gl.shaderSource(shader, source);
+    // Compile the shader program
+    gl.compileShader(shader);
+    // See if it compiled successfully
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+    }
+    return shader;
 }
 
 
 /***/ }),
 
-/***/ "./src/touchInput.js":
-/*!***************************!*\
-  !*** ./src/touchInput.js ***!
-  \***************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return touchInput; });
-function touchInput(Argl){
-
-  Argl.prototype.addTouchInput = function () {
-    this.mobile = true
-
-    let self = this
-
-    // 移动端横屏 应在具体应用中实现
-    //-----------
-    // let tip = document.createElement('span')
-    // tip.innerText = '横屏以获取最佳体验'
-
-    // //screen.width screen.height
-    // //window.innerHeight  window.innerWidth
-
-    // function detectOrient(){
-    //   if (screen.orientation.angle % 180 === 0) {
-    //     self.el.appendChild(tip)
-    //     self.canvas.width = Math.min(self.options.width, screen.width-16)
-    //     self.canvas.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight) -16)
-    //   } else {
-    //     tip.remove()
-    //     self.canvas.width = Math.min(self.options.width, screen.width-16)
-    //     self.canvas.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight)  -16)
-    //   }
-    // }
-    // detectOrient()
-    // window.addEventListener('orientationchange',detectOrient)
-
-    this.canvas.addEventListener("touchstart", handleStart, false)
-    this.canvas.addEventListener("touchend", handleEnd, false)
-    this.canvas.addEventListener("touchmove", handleMove, false)
-
-    this.ongoingTouches = new Array()
-    function handleStart(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        touches[i].startX = touches[i].pageX
-        touches[i].startY = touches[i].pageY
-        touches[i].deltaX = 0
-        touches[i].deltaY = 0
-        self.ongoingTouches.push(touches[i])
-      }
-    }
-
-    function handleEnd(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        let idx = ongoingTouchIndexById(touches[i].identifier)
-        touches[i].pageX
-        touches[i].pageY
-        self.ongoingTouches.splice(i, 1)
-      }
-    }
-    function handleMove(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        let idx = ongoingTouchIndexById(touches[i].identifier)
-
-        touches[i].startX = self.ongoingTouches[idx].startX
-        touches[i].startY = self.ongoingTouches[idx].startY
-        touches[i].deltaX = touches[i].pageX - self.ongoingTouches[idx].pageX
-        touches[i].deltaY = touches[i].pageY - self.ongoingTouches[idx].pageY
-
-        // console.log(self.ongoingTouches[idx].pageX, touches[i].pageX, self.ongoingTouches[0])
-        self.ongoingTouches.splice(idx, 1, touches[i])  // swap in the new touch record
-      }
-
-    }
-
-    function ongoingTouchIndexById(idToFind) {
-      for (let i = 0; i < self.ongoingTouches.length; i++) {
-        let id = self.ongoingTouches[i].identifier
-
-        if (id === idToFind) {
-          return i
-        }
-      }
-      return -1   // not found
-    }
-  }
-
-}
-
-
-/***/ }),
-
-/***/ "./src/util.js":
+/***/ "./src/util.ts":
 /*!*********************!*\
-  !*** ./src/util.js ***!
+  !*** ./src/util.ts ***!
   \*********************/
-/*! exports provided: mobilecheck, loadImage */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mobilecheck", function() { return mobilecheck; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loadImage", function() { return loadImage; });
 
+Object.defineProperty(exports, "__esModule", { value: true });
 function mobilecheck() {
-  var check = false;
-  (function (a) { if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4))) check = true; })(navigator.userAgent || navigator.vendor || window.opera);
-  return check;
-};
-
-
-function loadImage(imageUrl, onprogress) {
-  return new Promise((resolve, reject) => {
-    let xhr = new XMLHttpRequest()
-    let notifiedNotComputable = false
-
-    xhr.open('GET', imageUrl, true)
-    xhr.responseType = 'arraybuffer'
-
-    xhr.onprogress = function (ev) {
-      if (ev.lengthComputable) {
-        onprogress(parseInt((ev.loaded / ev.total) * 100))
-      } else {
-        if (!notifiedNotComputable) {
-          notifiedNotComputable = true
-          onprogress(-1)
-        }
-      }
-    }
-
-    xhr.onloadend = function () {
-      if (!xhr.status.toString().match(/^2/)) {
-        reject(xhr)
-      } else {
-        if (!notifiedNotComputable) {
-          onprogress(100)
-        }
-
-        let options = {}
-        let headers = xhr.getAllResponseHeaders()
-        let m = headers.match(/^Content-Type\:\s*(.*?)$/mi)
-
-        if (m && m[1]) {
-          options.type = m[1]
-        }
-
-        let blob = new Blob([this.response], options)
-        var imageUrl = window.URL.createObjectURL(blob)
-        let img = new Image()
-        img.src = imageUrl
-        img.onload = () => resolve(img)
-      }
-    }
-
-    xhr.send()
-  })
+    let check = false;
+    (function (a) { if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4)))
+        check = true; })(navigator.userAgent || navigator.vendor || window.opera);
+    return check;
 }
+exports.mobilecheck = mobilecheck;
+;
+function loadImage(imageUrl, onprogress) {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        let notifiedNotComputable = false;
+        xhr.open('GET', imageUrl, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onprogress = function (ev) {
+            if (ev.lengthComputable) {
+                onprogress(Math.round((ev.loaded / ev.total) * 100));
+            }
+            else {
+                if (!notifiedNotComputable) {
+                    notifiedNotComputable = true;
+                    onprogress(-1);
+                }
+            }
+        };
+        xhr.onloadend = function () {
+            if (!xhr.status.toString().match(/^2/)) {
+                reject(xhr);
+            }
+            else {
+                if (!notifiedNotComputable) {
+                    onprogress(100);
+                }
+                let options = {};
+                let headers = xhr.getAllResponseHeaders();
+                let m = headers.match(/^Content-Type\:\s*(.*?)$/mi);
+                if (m && m[1]) {
+                    options.type = m[1];
+                }
+                let blob = new Blob([this.response], options);
+                let imageUrl = window.URL.createObjectURL(blob);
+                let img = new Image();
+                img.src = imageUrl;
+                img.onload = () => resolve(img);
+            }
+        };
+        xhr.send();
+    });
+}
+exports.loadImage = loadImage;
 
 
 /***/ })
