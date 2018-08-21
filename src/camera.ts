@@ -26,7 +26,7 @@ class Camera {
   movementSpeed: number
   mouseSensitivity: number
   zoom: number
-  static Movement =  CameraMovement
+  static Movement = CameraMovement
 
   constructor(position = glm.vec3.fromValues(0, 0, 0),
     up = glm.vec3.fromValues(0.0, 1.0, 0.0),
@@ -102,7 +102,7 @@ class Camera {
     this.updateCameraVectors()
   }
 
-  processMouseScroll(yoffset: number) {
+  processZoom(yoffset: number) {
     if (this.zoom >= 1.0 && this.zoom <= 45.0)
       this.zoom -= yoffset / 200
     if (this.zoom <= 1.0)
@@ -125,6 +125,29 @@ class Camera {
     let up = glm.vec3.create()
     glm.vec3.cross(up, this.right, this.front)
     glm.vec3.normalize(this.up, up)
+  }
+
+  desktopFreeMoveControl(argl: any, keys: string[] = ['w', 's', 'a', 'd', ' ', 'Shift']) {
+    if (argl.currentlyPressedKeys.get(keys[0])) {
+      this.processMove(Camera.Movement.FORWARD, argl.deltaTime)
+    }
+    if (argl.currentlyPressedKeys.get(keys[1])) {
+      this.processMove(Camera.Movement.BACKWARD, argl.deltaTime)
+    }
+    if (argl.currentlyPressedKeys.get(keys[2])) {
+      this.processMove(Camera.Movement.LEFT, argl.deltaTime)
+    }
+    if (argl.currentlyPressedKeys.get(keys[3])) {
+      this.processMove(Camera.Movement.RIGHT, argl.deltaTime)
+    }
+    if (argl.currentlyPressedKeys.get(keys[4])) {
+      this.processMove(Camera.Movement.UP, argl.deltaTime)
+    }
+    if (argl.currentlyPressedKeys.get(keys[5])) {
+      this.processMove(Camera.Movement.DOWN, argl.deltaTime)
+    }
+    this.processViewAngle(argl.mouseInput.deltaX, -argl.mouseInput.deltaY)
+    this.processZoom(argl.mouseInput.wheelDeltaY)
   }
 
 }

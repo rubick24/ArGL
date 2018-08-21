@@ -7446,16 +7446,12 @@ const util_1 = __webpack_require__(/*! ./util */ "./src/util.ts");
 const document = window.document;
 class ArGL {
     constructor({ width = 300, height = 150, desktopInput = true, touchInput = true } = {}) {
-        this.options = arguments[0];
-        if (desktopInput)
-            this.options.desktopInput = true;
-        if (touchInput)
-            this.options.touchInput = true;
+        this.options = { width, height, desktopInput, touchInput };
+        // console.log(arguments[0], this.options)
         this.el = document.createElement('div');
         this.canvas = document.createElement('canvas');
         this.canvas.width = width;
         this.canvas.height = height;
-        // this.el.appendChild(this.canvas)
         this.loadingBar = document.createElement('progress');
         this.loadingBar.value = 0;
         this.loadingBar.max = 100;
@@ -7490,8 +7486,12 @@ class ArGL {
         else {
             this.mobile = false;
         }
-        if (desktopInput) {
-            let [currentlyPressedKeys, mouseInput] = ArGL.desktopInput(this.canvas);
+        if (this.options.desktopInput) {
+            let dio = { lockPointer: true };
+            if (typeof desktopInput !== 'boolean') {
+                dio = this.options.desktopInput;
+            }
+            let [currentlyPressedKeys, mouseInput] = ArGL.desktopInput(this.canvas, dio);
             this.currentlyPressedKeys = currentlyPressedKeys;
             this.mouseInput = mouseInput;
         }
@@ -7642,22 +7642,13 @@ class ArGL {
         this.fbShader.setInt('depthMap', 0);
         this.drawQuad([texture]);
     }
-    static desktopInput(el) {
+    static desktopInput(el, options) {
         let currentlyPressedKeys = new Map();
         let mouseInput = {
             deltaX: 0,
             deltaY: 0,
             wheelDeltaY: 0
         };
-        el.requestPointerLock = el.requestPointerLock ||
-            el.mozRequestPointerLock;
-        el.exitPointerLock = el.exitPointerLock ||
-            el.mozExitPointerLock;
-        el.onclick = function () {
-            el.requestPointerLock();
-        };
-        document.addEventListener('pointerlockchange', handleLockChange, false);
-        document.addEventListener('mozpointerlockchange', handleLockChange, false);
         function handleKeyDown(e) {
             currentlyPressedKeys.set(e.key, true);
         }
@@ -7671,20 +7662,43 @@ class ArGL {
         function wheel_callback(e) {
             mouseInput.wheelDeltaY = e.wheelDeltaY;
         }
-        function handleLockChange() {
-            if (document.pointerLockElement === el ||
-                document.mozPointerLockElement === el) {
-                document.addEventListener('keydown', handleKeyDown);
-                document.addEventListener('keyup', handleKeyUp);
-                document.addEventListener('mousemove', mouse_callback);
-                document.addEventListener('wheel', wheel_callback);
+        function addInputListener() {
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            document.addEventListener('mousemove', mouse_callback);
+            document.addEventListener('wheel', wheel_callback);
+        }
+        function removeInputListener() {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('keyup', handleKeyUp);
+            document.removeEventListener('mousemove', mouse_callback);
+            document.removeEventListener('wheel', wheel_callback);
+        }
+        if (options.lockPointer) {
+            el.requestPointerLock = el.requestPointerLock ||
+                el.mozRequestPointerLock;
+            el.exitPointerLock = el.exitPointerLock ||
+                el.mozExitPointerLock;
+            el.onclick = function () {
+                el.requestPointerLock();
+            };
+            document.addEventListener('pointerlockchange', handleLockChange, false);
+            document.addEventListener('mozpointerlockchange', handleLockChange, false);
+            function handleLockChange() {
+                if (document.pointerLockElement === el ||
+                    document.mozPointerLockElement === el) {
+                    addInputListener();
+                }
+                else {
+                    removeInputListener();
+                }
             }
-            else {
-                document.removeEventListener('keydown', handleKeyDown);
-                document.removeEventListener('keyup', handleKeyUp);
-                document.removeEventListener('mousemove', mouse_callback);
-                document.removeEventListener('wheel', wheel_callback);
-            }
+        }
+        else {
+            el.contentEditable = 'true';
+            el.style.cursor = 'crosshair';
+            el.addEventListener('focus', addInputListener);
+            el.addEventListener('blur', removeInputListener);
         }
         return [currentlyPressedKeys, mouseInput];
     }
@@ -7907,7 +7921,7 @@ class Camera {
         }
         this.updateCameraVectors();
     }
-    processMouseScroll(yoffset) {
+    processZoom(yoffset) {
         if (this.zoom >= 1.0 && this.zoom <= 45.0)
             this.zoom -= yoffset / 200;
         if (this.zoom <= 1.0)
@@ -7927,6 +7941,28 @@ class Camera {
         let up = glm.vec3.create();
         glm.vec3.cross(up, this.right, this.front);
         glm.vec3.normalize(this.up, up);
+    }
+    desktopFreeMoveControl(argl, keys = ['w', 's', 'a', 'd', ' ', 'Shift']) {
+        if (argl.currentlyPressedKeys.get(keys[0])) {
+            this.processMove(Camera.Movement.FORWARD, argl.deltaTime);
+        }
+        if (argl.currentlyPressedKeys.get(keys[1])) {
+            this.processMove(Camera.Movement.BACKWARD, argl.deltaTime);
+        }
+        if (argl.currentlyPressedKeys.get(keys[2])) {
+            this.processMove(Camera.Movement.LEFT, argl.deltaTime);
+        }
+        if (argl.currentlyPressedKeys.get(keys[3])) {
+            this.processMove(Camera.Movement.RIGHT, argl.deltaTime);
+        }
+        if (argl.currentlyPressedKeys.get(keys[4])) {
+            this.processMove(Camera.Movement.UP, argl.deltaTime);
+        }
+        if (argl.currentlyPressedKeys.get(keys[5])) {
+            this.processMove(Camera.Movement.DOWN, argl.deltaTime);
+        }
+        this.processViewAngle(argl.mouseInput.deltaX, -argl.mouseInput.deltaY);
+        this.processZoom(argl.mouseInput.wheelDeltaY);
     }
 }
 Camera.Movement = CameraMovement;

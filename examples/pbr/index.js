@@ -63,7 +63,8 @@ argl.start()
 // draw loop
 //------------
 argl.draw = (time)=>{
-  processInput()
+
+  camera.desktopFreeMoveControl(argl)
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -93,43 +94,3 @@ argl.draw = (time)=>{
   }
 }
 
-function processInput() {
-  if (argl.mobile) {
-    let first = argl.ongoingTouches.find(touch => {
-      return touch.identifier >= 0
-    })
-
-    // for(let i in movementStatus){
-    //   if(movementStatus[i]){
-    //     camera.processMove(Number(i)+1, argl.deltaTime)
-    //   }
-    // }
-
-    if (first) {
-      camera.processViewAngle(first.deltaX * 5, -first.deltaY * 5)
-    }
-
-  } else {
-    if (argl.currentlyPressedKeys.get('w')) {
-      camera.processMove(Camera.Movement.FORWARD, argl.deltaTime)
-    }
-    if (argl.currentlyPressedKeys.get('s')) {
-      camera.processMove(Camera.Movement.BACKWARD, argl.deltaTime)
-    }
-    if (argl.currentlyPressedKeys.get('a')) {
-      camera.processMove(Camera.Movement.LEFT, argl.deltaTime)
-    }
-    if (argl.currentlyPressedKeys.get('d')) {
-      camera.processMove(Camera.Movement.RIGHT, argl.deltaTime)
-    }
-    if (argl.currentlyPressedKeys.get(' ')) {
-      camera.processMove(Camera.Movement.UP, argl.deltaTime)
-    }
-    if (argl.currentlyPressedKeys.get('Shift')) {
-      camera.processMove(Camera.Movement.DOWN, argl.deltaTime)
-    }
-    camera.processViewAngle(argl.mouseInput.deltaX, -argl.mouseInput.deltaY)
-    camera.processMouseScroll(argl.mouseInput.wheelDeltaY)
-  }
-
-}
