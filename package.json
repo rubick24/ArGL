@@ -1,6 +1,6 @@
 {
   "name": "argl",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "main": "dist/argl.js",
   "author": "申鹏飞",
   "license": "MIT",
