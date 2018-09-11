@@ -78,8 +78,10 @@ class ArGL {
 
     this.el = document.createElement('div')
     this.canvas = document.createElement('canvas')
-    this.canvas.width = width
-    this.canvas.height = height
+    this.el.style.width = width.toString() + 'px'
+    this.el.style.height = height.toString() + 'px'
+    this.canvas.style.width = width.toString() + 'px'
+    this.canvas.style.height = height.toString() + 'px'
 
     this.loadingBar = document.createElement('progress')
     this.loadingBar.value = 0
