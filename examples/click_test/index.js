@@ -1,4 +1,4 @@
-import { ArGL, Camera, Shader } from './../../dist/argl'
+import { ArGL, FreeMoveCamera, Shader } from './../../dist/argl'
 import * as glm from 'gl-matrix'
 
 import Ray from './ray'
@@ -21,7 +21,7 @@ let gl = argl.gl
 gl.enable(gl.DEPTH_TEST)
 gl.enable(gl.CULL_FACE)
 
-let camera = new Camera(glm.vec3.fromValues(0.0, 0.0, 5.0))
+let camera = new FreeMoveCamera([0.0, 0.0, 5.0], [0, 1, 0, 0])
 let shader = new Shader(gl, vs, fs)
 
 let suzanneMesh = argl.loadMesh(suzanneObj)
@@ -79,7 +79,8 @@ gl.clearColor(0, 0, 0, 1)
 
 argl.draw = (time) => {
 
-  // camera.desktopFreeMoveControl(argl)
+  // let step = argl.deltaTime * 0.005
+  // camera.desktopFreeMoveControl(argl.currentlyPressedKeys, step, argl.mouseInput, 0.05)
   processInput()
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -98,23 +99,24 @@ argl.draw = (time) => {
 }
 
 function processInput() {
+  let step = argl.deltaTime * 0.005
   if (argl.currentlyPressedKeys.get('w')) {
-    camera.processMove(Camera.Movement.FORWARD, argl.deltaTime)
+    camera.processMove(FreeMoveCamera.Movement.FORWARD, step)
   }
   if (argl.currentlyPressedKeys.get('s')) {
-    camera.processMove(Camera.Movement.BACKWARD, argl.deltaTime)
+    camera.processMove(FreeMoveCamera.Movement.BACKWARD, step)
   }
   if (argl.currentlyPressedKeys.get('a')) {
-    camera.processMove(Camera.Movement.LEFT, argl.deltaTime)
+    camera.processMove(FreeMoveCamera.Movement.LEFT, step)
   }
   if (argl.currentlyPressedKeys.get('d')) {
-    camera.processMove(Camera.Movement.RIGHT, argl.deltaTime)
+    camera.processMove(FreeMoveCamera.Movement.RIGHT, step)
   }
   if (argl.currentlyPressedKeys.get(' ')) {
-    camera.processMove(Camera.Movement.UP, argl.deltaTime)
+    camera.processMove(FreeMoveCamera.Movement.UP, step)
   }
   if (argl.currentlyPressedKeys.get('Shift')) {
-    camera.processMove(Camera.Movement.DOWN, argl.deltaTime)
+    camera.processMove(FreeMoveCamera.Movement.DOWN, step)
   }
   // camera.processViewAngle(argl.mouseInput.deltaX, -argl.mouseInput.deltaY)
   camera.processZoom(argl.mouseInput.wheelDeltaY)

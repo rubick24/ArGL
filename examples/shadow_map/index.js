@@ -1,4 +1,4 @@
-import { ArGL, Camera, Shader } from './../../dist/argl'
+import { ArGL, FreeMoveCamera, Shader } from './../../dist/argl'
 import * as glm from 'gl-matrix'
 
 import depthVs from './shader/depth.vs'
@@ -22,7 +22,7 @@ let gl = argl.gl
 gl.enable(gl.DEPTH_TEST)
 gl.enable(gl.CULL_FACE)
 
-let camera = new Camera(glm.vec3.fromValues(0.0, 0.0, 5.0))
+let camera = new FreeMoveCamera([0.0, 0.0, 5.0], [0, 1, 0, 0])
 let shadow_depth_shader = new Shader(gl, depthVs, depthFs)
 let shader = new Shader(gl, vs, fs)
 
@@ -70,7 +70,8 @@ gl.clearColor(0, 0, 0, 1)
 
 argl.draw = (time) => {
 
-  camera.desktopFreeMoveControl(argl)
+  let step = argl.deltaTime * 0.005
+  camera.desktopFreeMoveControl(argl.currentlyPressedKeys, step, argl.mouseInput, 0.05)
 
   gl.cullFace(gl.FRONT)
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
