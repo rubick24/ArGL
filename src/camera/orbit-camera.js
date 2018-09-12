@@ -1,5 +1,5 @@
 import Camera from './camera';
-import { vec3 } from 'gl-matrix'
+import { vec3, quat } from 'gl-matrix'
 
 function rotateVec(vec, normal, angle) {
   let direction = vec3.create()
@@ -17,22 +17,31 @@ function rotateVec(vec, normal, angle) {
 }
 
 class OrbitCamera extends Camera {
-  constructor(position = [0, 0, 5], center = [0, 0, 0], orientation = [0, 0, 0, 1], zoom = 45) {
+  constructor(position = [0, 0, 5], center = [0, 0, 0], zoom = 45) {
+    let direction = vec3.create()
+    vec3.sub(direction, center, position)
+    vec3.normalize(direction, direction)
+
+    let dirX = [direction[0], 0, direction[2]]
+    let dirY = [0, direction[1], Math.sqrt(1 - direction[1] ** 2)]
+    let angleX = vec3.length(dirX) === 0 ? 0 : vec3.angle([0, 0, 1], dirX)
+    angleX = direction[0] > 0 ? -angleX : angleX
+    let angleY = vec3.length(dirY) === 0 ? 0 : vec3.angle([0, 0, 1], dirY)
+    angleY = direction[1] > 0 ? -angleY : angleY
+    console.log(direction, angleX, angleY)
+    console.log(dirX, dirY)
+    let orientation = quat.create()
+
     super(position, orientation, zoom)
+    this.yaw(angleX)
+    this.pitch(angleY)
+
     this.center = center
     this.distance = vec3.distance(center, position)
 
   }
 
   processRotate(radianX, radianY) {
-    if (radianX > Math.PI || radianY > Math.PI)
-      return
-
-    let flag = false || radianY > 0 && vec3.angle(this.front, [0, -1, 0]) < radianY
-    flag = flag || radianY < 0 && vec3.angle(this.front, [0, 1, 0]) < -radianY
-
-    if (flag)
-      radianY = 0
 
     let t1 = vec3.create()
     vec3.scale(t1, this.front, -1)
