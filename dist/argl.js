@@ -6,7 +6,7 @@
 	else if(typeof exports === 'object')
 		exports["ArGL"] = factory(require("gl-matrix"));
 	else
-		root["ArGL"] = factory(root["gl-matrix"]);
+		root["ArGL"] = factory(root["window"]);
 })(window, function(__WEBPACK_EXTERNAL_MODULE_gl_matrix__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1121,9 +1121,9 @@ function loadBinary(uri, onprogress) {
 /***/ }),
 
 /***/ "gl-matrix":
-/*!******************************************************************************************************!*\
-  !*** external {"commonjs":"gl-matrix","commonjs2":"gl-matrix","amd":"gl-matrix","root":"gl-matrix"} ***!
-  \******************************************************************************************************/
+/*!***************************************************************************************************!*\
+  !*** external {"root":"window","commonjs":"gl-matrix","commonjs2":"gl-matrix","amd":"gl-matrix"} ***!
+  \***************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 

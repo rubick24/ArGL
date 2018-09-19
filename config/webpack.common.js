@@ -19,12 +19,14 @@ module.exports = {
       }
     ]
   },
-  externals: {
-    'gl-matrix': {
-      commonjs: 'gl-matrix',
-      commonjs2: 'gl-matrix',
-      amd: 'gl-matrix',
-      root: 'gl-matrix'
+  externals: [
+    {
+      'gl-matrix': {
+        root: 'window',
+        commonjs: 'gl-matrix',
+        commonjs2: 'gl-matrix',
+        amd: 'gl-matrix'
+      }
     }
-  }
+  ]
 };
