@@ -62,7 +62,7 @@ argl.start()
 
 // draw loop
 //------------
-argl.draw = (time)=>{
+argl.draw = (time) => {
 
   let step = argl.deltaTime * 0.005
   camera.desktopFreeMoveControl(argl.currentlyPressedKeys, step, argl.mouseInput, 0.05)

@@ -4,6 +4,7 @@ module.exports = {
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, '../dist'),
+    library: 'ArGL',
     libraryTarget: "umd"
   },
   module: {
@@ -17,5 +18,13 @@ module.exports = {
         use: 'raw-loader'
       }
     ]
+  },
+  externals: {
+    'gl-matrix': {
+      commonjs: 'gl-matrix',
+      commonjs2: 'gl-matrix',
+      amd: 'gl-matrix',
+      root: 'gl-matrix'
+    }
   }
 };

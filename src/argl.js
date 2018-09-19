@@ -12,7 +12,6 @@ class ArGL {
     touchInput = true
   }) {
     this.options = { width, height, desktopInput, touchInput }
-    // console.log(arguments[0], this.options)
 
     this.el = document.createElement('div')
     this.canvas = document.createElement('canvas')
@@ -62,7 +61,7 @@ class ArGL {
 
     if (this.options.desktopInput) {
       let dio = { lockPointer: true }
-      if (typeof desktopInput !== 'boolean') {
+      if (typeof this.options.desktopInput !== 'boolean') {
         dio = this.options.desktopInput
       }
       let [currentlyPressedKeys, mouseInput] = ArGL.desktopInput(this.canvas, dio)
