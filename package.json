@@ -1,6 +1,6 @@
 {
   "name": "argl",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "main": "dist/argl.min.js",
   "types": "dist/argl.d.ts",
   "module": "src/index.js",
