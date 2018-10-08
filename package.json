@@ -5,6 +5,7 @@
   "types": "dist/argl.d.ts",
   "module": "src/index.js",
   "author": "申鹏飞",
+  "keywords": ["webgl", "webgl2"],
   "license": "MIT",
   "scripts": {
     "test": "webpack-dev-server --config ./examples/shadow_map/webpack.config.js",
