@@ -6,33 +6,29 @@ import { vec2, vec3, vec4, mat2, mat3, mat4, quat } from 'gl-matrix'
 
 export as namespace ArGL;
 
-interface desktopInputOptions {
-  lockPointer: boolean
-}
-export interface Options {
-  width?: number,
-  height?: number,
-  desktopInput?: boolean | desktopInputOptions,
-  touchInput?: boolean
-}
-
-
 export class ArGL {
-  el: HTMLDivElement
   canvas: HTMLCanvasElement
-  loadingBar: HTMLProgressElement
   resource: any
   gl: WebGL2RenderingContext
   textures: WebGLTexture[]
 
+  loadProgress: number
   resourceCount: number
-  loadProgress: number[]
+  loadProgresses: number[]
   loadProgressProxy: any
   options: Options
 
   deltaTime: number
   lastFrame: number
   mobile: boolean
+
+
+  constructor(canvas: HTMLCanvasElement, options: {
+    desktopInput?: boolean | {
+      lockPointer: boolean
+    },
+    touchInput?: boolean
+  })
 
   /**
    * will be called in render circle
@@ -151,7 +147,7 @@ export class FreeMoveCamera extends Camera {
    * @param step
    * @param mouseInput
    * @param mouseSensitivity
-   * @param keys ['w', 's', 'a', 'd', ' ', 'Shift', 'q', 'e']
+   * @param keys default ['w', 's', 'a', 'd', ' ', 'Shift', 'q', 'e']
    */
   desktopFreeMoveControl(currentlyPressedKeys: Map<string, boolean>, step: number, mouseInput: any, mouseSensitivity: number, keys: string[]): void
 
@@ -176,8 +172,14 @@ export class OrbitCamera extends Camera {
   processRotate(radianX: number, radianY: number)
 
   /**
-   * add orbitControl to argl
+   * add desktop orbitControl to argl
    * @param argl
    */
-  orbitControl(argl: ArGL)
+  desktopOrbitControl(argl: ArGL)
+
+  /**
+   * add mobile orbitControl to argl
+   * @param argl
+   */
+  mobileOrbitControl(argl: ArGL)
 }

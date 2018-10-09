@@ -3,41 +3,38 @@ import { mobilecheck, loadImage } from './util'
 import Input from './input'
 import FBHelper from './FBHelper'
 
+const defaultOptions = {
+  desktopInput: true,
+  touchInput: true
+}
 
 class ArGL {
-  constructor({
-    width = 300,
-    height = 150,
-    desktopInput = true,
-    touchInput = true
-  }) {
-    this.options = { width, height, desktopInput, touchInput }
+  constructor(canvas, options) {
+    if (options) {
+      this.options = Object.assign(defaultOptions, options)
+    } else {
+      this.options = defaultOptions
+    }
 
-    this.el = document.createElement('div')
-    this.canvas = document.createElement('canvas')
-    this.el.style.width = width.toString() + 'px'
-    this.el.style.height = height.toString() + 'px'
-    this.canvas.style.width = width.toString() + 'px'
-    this.canvas.style.height = height.toString() + 'px'
 
-    this.loadingBar = document.createElement('progress')
-    this.loadingBar.value = 0
-    this.loadingBar.max = 100
-    this.loadingBar.style.width = width + 'px'
-    this.el.appendChild(this.loadingBar)
+    this.canvas = canvas
+
+    this.loadProgress = 0
 
     this.resource = {
       images: []
     }
     this.resourceCount = 0
-    this.loadProgress = []
+    this._loadProgresses = []
     let self = this
-    this.loadProgressProxy = new Proxy(this.loadProgress, {
+    this.loadProgresses = new Proxy(this._loadProgresses, {
       set: function (target, key, value, receiver) {
-        let sum = self.loadProgress.reduce((p, v) => { return p + Number(v) }, 0)
+        let sum = self._loadProgresses.reduce((p, v) => { return p + Number(v) }, 0)
         // console.log('progress: ' + Math.round(sum / self.resourceCount) + '%')
-        if (self.resourceCount !== 0) {
-          self.loadingBar.value = sum / self.resourceCount
+        if (self.resourceCount !== 0 && self.loadProgress !== sum / self.resourceCount) {
+          self.loadProgress = sum / self.resourceCount
+          let Progress = new CustomEvent('progress', { detail: self.loadProgress })
+          self.canvas.dispatchEvent(Progress)
         }
         return Reflect.set(target, key, value, receiver)
       }
@@ -64,28 +61,23 @@ class ArGL {
       if (typeof this.options.desktopInput !== 'boolean') {
         dio = this.options.desktopInput
       }
-      let [currentlyPressedKeys, mouseInput] = ArGL.desktopInput(this.canvas, dio)
+      let {currentlyPressedKeys, mouseInput} = ArGL.desktopInput(this.canvas, dio)
       this.currentlyPressedKeys = currentlyPressedKeys
       this.mouseInput = mouseInput
-
     }
 
-    if (touchInput) {
-      let ongoingTouches = ArGL.touchInput(this.canvas)
-      this.ongoingTouches = ongoingTouches
+    if (this.options.touchInput) {
+      this.touchInput = ArGL.touchInput(this.canvas)
     }
   }
 
   resize() {
-    // 获取浏览器中画布的显示尺寸
     let displayWidth = this.canvas.clientWidth
     let displayHeight = this.canvas.clientHeight
 
-    // 检尺寸是否相同
     if (this.canvas.width != displayWidth ||
       this.canvas.height != displayHeight) {
 
-      // 设置为相同的尺寸
       this.canvas.width = displayWidth
       this.canvas.height = displayHeight
     }
@@ -103,10 +95,9 @@ class ArGL {
     this.draw(time)
 
     if (this.options.touchInput) {
-      for (let i in this.ongoingTouches) {
-        this.ongoingTouches[i].deltaX = 0
-        this.ongoingTouches[i].deltaY = 0
-      }
+      this.touchInput.pan.deltaX = 0
+      this.touchInput.pan.deltaY = 0
+      this.touchInput.pitch.scale = 0
     }
     if (this.options.desktopInput) {
       this.mouseInput.deltaX = 0
@@ -158,9 +149,6 @@ class ArGL {
 
   async start() {
     let textures = await this.loadTexture()
-
-    this.loadingBar.remove()
-    this.el.appendChild(this.canvas)
     this.render(this.lastFrame)
     this.textures = textures
     this.started()
@@ -175,7 +163,7 @@ class ArGL {
     this.resourceCount += this.resource.images.length
     let promises = this.resource.images.map((element, index) => {
       return ArGL.loadImage(element, (ratio) => {
-        this.loadProgressProxy[index] = ratio
+        this.loadProgresses[index] = ratio
       })
     })
 

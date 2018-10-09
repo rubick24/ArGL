@@ -1,3 +1,4 @@
+import * as Hammer from 'hammerjs'
 
 export default function Input(Argl) {
   Argl.desktopInput = function (el, options) {
@@ -25,12 +26,12 @@ export default function Input(Argl) {
     function wheel_callback(e) {
       mouseInput.wheelDeltaY = e.wheelDeltaY
     }
-    function handleDragStart(e) {
+    function handleDragStart() {
       mouseInput.drag = true
       mouseInput.dragX = 0
       mouseInput.dragY = 0
     }
-    function handleDragEnd(e) {
+    function handleDragEnd() {
       mouseInput.drag = false
     }
     function addInputListener() {
@@ -75,96 +76,48 @@ export default function Input(Argl) {
       el.addEventListener('blur', removeInputListener)
     }
 
-    return [currentlyPressedKeys, mouseInput]
+    return { currentlyPressedKeys, mouseInput }
   }
 
   Argl.touchInput = function (el) {
 
-    const ongoingTouches = []
-    // 移动端横屏 应在具体应用中实现
-    //-----------
-    // let tip = document.createElement('span')
-    // tip.innerText = '横屏以获取最佳体验'
-
-    // //screen.width screen.height
-    // //window.innerHeight  window.innerWidth
-
-    // function detectOrient(){
-    //   if (screen.orientation.angle % 180 === 0) {
-    //     self.el.appendChild(tip)
-    //     el.width = Math.min(self.options.width, screen.width-16)
-    //     el.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight) -16)
-    //   } else {
-    //     tip.remove()
-    //     el.width = Math.min(self.options.width, screen.width-16)
-    //     el.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight)  -16)
-    //   }
-    // }
-    // detectOrient()
-    // window.addEventListener('orientationchange',detectOrient)
-
-    el.addEventListener("touchstart", handleStart, false)
-    el.addEventListener("touchend", handleEnd, false)
-    el.addEventListener("touchmove", handleMove, false)
-
-
-    function handleStart(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        let touch = {
-          pageX: touches[i].pageX,
-          pageY: touches[i].pageY,
-          startX: touches[i].pageX,
-          startY: touches[i].pageY,
-          deltaX: 0,
-          deltaY: 0,
-          identifier: touches[i].identifier
-        }
-        ongoingTouches.push(touch)
-      }
+    let pan = {
+      lastX: 0,
+      lastY: 0,
+      deltaX: 0,
+      deltaY: 0
     }
-
-    function handleEnd(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        let idx = ongoingTouchIndexById(touches[i].identifier)
-        ongoingTouches.splice(idx, 1)
-      }
+    let pitch = {
+      scale: 0,
+      lastScale: 1
     }
-    function handleMove(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        let idx = ongoingTouchIndexById(touches[i].identifier)
+    let hammer = new Hammer.Manager(el)
+    hammer.add(new Hammer.Pan({ direction: Hammer.DIRECTION_ALL, threshold: 10 }))
+    hammer.add(new Hammer.Pinch({ threshold: 0 }))
 
-        let touch = {
-          pageX: touches[i].pageX,
-          pageY: touches[i].pageY,
-          startX: ongoingTouches[idx].startX,
-          startY: ongoingTouches[idx].startY,
-          deltaX: touches[i].pageX - ongoingTouches[idx].pageX,
-          deltaY: touches[i].pageY - ongoingTouches[idx].pageY,
-          identifier: touches[i].identifier
-        }
-        ongoingTouches.splice(idx, 1, touch)  // swap in the new touch record
-      }
+    hammer.on('panstart', function (e) {
+      pan.lastX = 0
+      pan.lastY = 0
+      pan.deltaX = e.deltaX
+      pan.deltaY = e.deltaY
+    })
+    hammer.on('panmove', function (e) {
+      pan.deltaX = e.deltaX - pan.lastX
+      pan.deltaY = e.deltaY - pan.lastY
+      pan.lastX = e.deltaX
+      pan.lastY = e.deltaY
+    })
 
-    }
+    hammer.on('pinchstart', function () {
+      pitch.scale = 0
+      pitch.lastScale = 1
+    })
+    hammer.on('pinchmove', function (e) {
+      pitch.scale = e.scale / pitch.lastScale - 1
+      pitch.lastScale = e.scale
+    })
 
-    function ongoingTouchIndexById(idToFind) {
-      for (let i = 0; i < ongoingTouches.length; i++) {
-        let id = ongoingTouches[i].identifier
-
-        if (id === idToFind) {
-          return i
-        }
-      }
-      return -1   // not found
-    }
-
-    return ongoingTouches
+    return { pan, pitch }
   }
 
 }

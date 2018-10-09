@@ -9,15 +9,12 @@ import fs from './shader/shadow_mapping.fs'
 import suzanneObj from './assets/suzanne.obj'
 import planeObj from './assets/plane.obj'
 
+let canvas = document.createElement('canvas')
+document.body.appendChild(canvas)
+canvas.height = 540
+canvas.width = 960
 
-let width = 960
-let height = 540
-let argl = new ArGL({
-  width: width,
-  height: height
-})
-document.body.appendChild(argl.el)
-
+let argl = new ArGL(canvas)
 let gl = argl.gl
 gl.enable(gl.DEPTH_TEST)
 gl.enable(gl.CULL_FACE)
@@ -42,7 +39,7 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, width, height, 0,
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, canvas.width, canvas.height, 0,
   gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null)
 
 // Create a framebuffer and attach the textures.

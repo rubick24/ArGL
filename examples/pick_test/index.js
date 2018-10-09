@@ -8,14 +8,16 @@ import fs from './shader/ct.fs'
 
 import suzanneObj from './assets/suzanne.obj'
 
-let argl = new ArGL({
-  width: 960,
-  height: 540,
+let canvas = document.createElement('canvas')
+document.body.appendChild(canvas)
+canvas.height = 540
+canvas.width = 960
+
+let argl = new ArGL(canvas, {
   desktopInput: {
     lockPointer: false
   }
 })
-document.body.appendChild(argl.el)
 
 let gl = argl.gl
 gl.enable(gl.DEPTH_TEST)
@@ -33,9 +35,9 @@ let model, view, projection
 //
 argl.canvas.addEventListener('mousemove', e => {
 
-  let angleY = -((e.offsetY * camera.zoom / argl.options.height) - (camera.zoom / 2))
-  let zoomX = (camera.zoom / argl.options.height) * argl.options.width
-  let angleX = (e.offsetX * zoomX / argl.options.width) - (zoomX / 2)
+  let angleY = -((e.offsetY * camera.zoom / canvas.height) - (camera.zoom / 2))
+  let zoomX = (camera.zoom / canvas.height) * canvas.width
+  let angleX = (e.offsetX * zoomX / canvas.width) - (zoomX / 2)
   //console.log('angle X,Y:', angleX, angleY)
 
   let normalFR = glm.vec3.create()

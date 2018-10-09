@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("gl-matrix"));
+		module.exports = factory(require("gl-matrix"), require("hammerjs"));
 	else if(typeof define === 'function' && define.amd)
-		define(["gl-matrix"], factory);
+		define(["gl-matrix", "hammerjs"], factory);
 	else if(typeof exports === 'object')
-		exports["ArGL"] = factory(require("gl-matrix"));
+		exports["ArGL"] = factory(require("gl-matrix"), require("hammerjs"));
 	else
-		root["ArGL"] = factory(root["window"]);
-})(window, function(__WEBPACK_EXTERNAL_MODULE_gl_matrix__) {
+		root["ArGL"] = factory(root["window"], root["Hammer"]);
+})(window, function(__WEBPACK_EXTERNAL_MODULE_gl_matrix__, __WEBPACK_EXTERNAL_MODULE_hammerjs__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -244,41 +244,38 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const defaultOptions = {
+  desktopInput: true,
+  touchInput: true
+}
 
 class ArGL {
-  constructor({
-    width = 300,
-    height = 150,
-    desktopInput = true,
-    touchInput = true
-  }) {
-    this.options = { width, height, desktopInput, touchInput }
+  constructor(canvas, options) {
+    if (options) {
+      this.options = Object.assign(defaultOptions, options)
+    } else {
+      this.options = defaultOptions
+    }
 
-    this.el = document.createElement('div')
-    this.canvas = document.createElement('canvas')
-    this.el.style.width = width.toString() + 'px'
-    this.el.style.height = height.toString() + 'px'
-    this.canvas.style.width = width.toString() + 'px'
-    this.canvas.style.height = height.toString() + 'px'
 
-    this.loadingBar = document.createElement('progress')
-    this.loadingBar.value = 0
-    this.loadingBar.max = 100
-    this.loadingBar.style.width = width + 'px'
-    this.el.appendChild(this.loadingBar)
+    this.canvas = canvas
+
+    this.loadProgress = 0
 
     this.resource = {
       images: []
     }
     this.resourceCount = 0
-    this.loadProgress = []
+    this._loadProgresses = []
     let self = this
-    this.loadProgressProxy = new Proxy(this.loadProgress, {
+    this.loadProgresses = new Proxy(this._loadProgresses, {
       set: function (target, key, value, receiver) {
-        let sum = self.loadProgress.reduce((p, v) => { return p + Number(v) }, 0)
+        let sum = self._loadProgresses.reduce((p, v) => { return p + Number(v) }, 0)
         // console.log('progress: ' + Math.round(sum / self.resourceCount) + '%')
-        if (self.resourceCount !== 0) {
-          self.loadingBar.value = sum / self.resourceCount
+        if (self.resourceCount !== 0 && self.loadProgress !== sum / self.resourceCount) {
+          self.loadProgress = sum / self.resourceCount
+          let Progress = new CustomEvent('progress', { detail: self.loadProgress })
+          self.canvas.dispatchEvent(Progress)
         }
         return Reflect.set(target, key, value, receiver)
       }
@@ -305,28 +302,23 @@ class ArGL {
       if (typeof this.options.desktopInput !== 'boolean') {
         dio = this.options.desktopInput
       }
-      let [currentlyPressedKeys, mouseInput] = ArGL.desktopInput(this.canvas, dio)
+      let {currentlyPressedKeys, mouseInput} = ArGL.desktopInput(this.canvas, dio)
       this.currentlyPressedKeys = currentlyPressedKeys
       this.mouseInput = mouseInput
-
     }
 
-    if (touchInput) {
-      let ongoingTouches = ArGL.touchInput(this.canvas)
-      this.ongoingTouches = ongoingTouches
+    if (this.options.touchInput) {
+      this.touchInput = ArGL.touchInput(this.canvas)
     }
   }
 
   resize() {
-    // 获取浏览器中画布的显示尺寸
     let displayWidth = this.canvas.clientWidth
     let displayHeight = this.canvas.clientHeight
 
-    // 检尺寸是否相同
     if (this.canvas.width != displayWidth ||
       this.canvas.height != displayHeight) {
 
-      // 设置为相同的尺寸
       this.canvas.width = displayWidth
       this.canvas.height = displayHeight
     }
@@ -344,10 +336,9 @@ class ArGL {
     this.draw(time)
 
     if (this.options.touchInput) {
-      for (let i in this.ongoingTouches) {
-        this.ongoingTouches[i].deltaX = 0
-        this.ongoingTouches[i].deltaY = 0
-      }
+      this.touchInput.pan.deltaX = 0
+      this.touchInput.pan.deltaY = 0
+      this.touchInput.pitch.scale = 0
     }
     if (this.options.desktopInput) {
       this.mouseInput.deltaX = 0
@@ -399,9 +390,6 @@ class ArGL {
 
   async start() {
     let textures = await this.loadTexture()
-
-    this.loadingBar.remove()
-    this.el.appendChild(this.canvas)
     this.render(this.lastFrame)
     this.textures = textures
     this.started()
@@ -416,7 +404,7 @@ class ArGL {
     this.resourceCount += this.resource.images.length
     let promises = this.resource.images.map((element, index) => {
       return ArGL.loadImage(element, (ratio) => {
-        this.loadProgressProxy[index] = ratio
+        this.loadProgresses[index] = ratio
       })
     })
 
@@ -665,8 +653,6 @@ class OrbitCamera extends _camera__WEBPACK_IMPORTED_MODULE_0__["default"] {
     angleX = direction[0] > 0 ? -angleX : angleX
     let angleY = gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].length(dirY) === 0 ? 0 : gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].angle([0, 0, 1], dirY)
     angleY = direction[1] > 0 ? -angleY : angleY
-    console.log(direction, angleX, angleY)
-    console.log(dirX, dirY)
     let orientation = gl_matrix__WEBPACK_IMPORTED_MODULE_1__["quat"].create()
 
     super(position, orientation, zoom)
@@ -695,13 +681,20 @@ class OrbitCamera extends _camera__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
   }
 
-  orbitControl(argl) {
+  desktopOrbitControl(argl) {
     if (argl.mouseInput.drag) {
       let radianX = argl.mouseInput.dragX / argl.canvas.clientWidth * Math.PI * 2
       let radianY = argl.mouseInput.dragY / argl.canvas.clientHeight * Math.PI * 2
       this.processRotate(radianX, radianY)
     }
     this.processZoom(argl.mouseInput.wheelDeltaY)
+  }
+
+  mobileOrbitControl(argl) {
+    let radianX = argl.touchInput.pan.deltaX / argl.canvas.clientWidth * Math.PI * 2
+    let radianY = argl.touchInput.pan.deltaY / argl.canvas.clientHeight * Math.PI * 2
+    this.processRotate(radianX, radianY)
+    this.processZoom(argl.touchInput.pitch.scale*10000)
   }
 
 }
@@ -761,6 +754,9 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Input; });
+/* harmony import */ var hammerjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! hammerjs */ "hammerjs");
+/* harmony import */ var hammerjs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(hammerjs__WEBPACK_IMPORTED_MODULE_0__);
+
 
 function Input(Argl) {
   Argl.desktopInput = function (el, options) {
@@ -788,12 +784,12 @@ function Input(Argl) {
     function wheel_callback(e) {
       mouseInput.wheelDeltaY = e.wheelDeltaY
     }
-    function handleDragStart(e) {
+    function handleDragStart() {
       mouseInput.drag = true
       mouseInput.dragX = 0
       mouseInput.dragY = 0
     }
-    function handleDragEnd(e) {
+    function handleDragEnd() {
       mouseInput.drag = false
     }
     function addInputListener() {
@@ -838,96 +834,48 @@ function Input(Argl) {
       el.addEventListener('blur', removeInputListener)
     }
 
-    return [currentlyPressedKeys, mouseInput]
+    return { currentlyPressedKeys, mouseInput }
   }
 
   Argl.touchInput = function (el) {
 
-    const ongoingTouches = []
-    // 移动端横屏 应在具体应用中实现
-    //-----------
-    // let tip = document.createElement('span')
-    // tip.innerText = '横屏以获取最佳体验'
-
-    // //screen.width screen.height
-    // //window.innerHeight  window.innerWidth
-
-    // function detectOrient(){
-    //   if (screen.orientation.angle % 180 === 0) {
-    //     self.el.appendChild(tip)
-    //     el.width = Math.min(self.options.width, screen.width-16)
-    //     el.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight) -16)
-    //   } else {
-    //     tip.remove()
-    //     el.width = Math.min(self.options.width, screen.width-16)
-    //     el.height = Math.min(self.options.height, screen.height-(screen.width-window.innerHeight)  -16)
-    //   }
-    // }
-    // detectOrient()
-    // window.addEventListener('orientationchange',detectOrient)
-
-    el.addEventListener("touchstart", handleStart, false)
-    el.addEventListener("touchend", handleEnd, false)
-    el.addEventListener("touchmove", handleMove, false)
-
-
-    function handleStart(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        let touch = {
-          pageX: touches[i].pageX,
-          pageY: touches[i].pageY,
-          startX: touches[i].pageX,
-          startY: touches[i].pageY,
-          deltaX: 0,
-          deltaY: 0,
-          identifier: touches[i].identifier
-        }
-        ongoingTouches.push(touch)
-      }
+    let pan = {
+      lastX: 0,
+      lastY: 0,
+      deltaX: 0,
+      deltaY: 0
     }
-
-    function handleEnd(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        let idx = ongoingTouchIndexById(touches[i].identifier)
-        ongoingTouches.splice(idx, 1)
-      }
+    let pitch = {
+      scale: 0,
+      lastScale: 1
     }
-    function handleMove(e) {
-      e.preventDefault()
-      let touches = e.changedTouches
-      for (let i = 0; i < touches.length; i++) {
-        let idx = ongoingTouchIndexById(touches[i].identifier)
+    let hammer = new hammerjs__WEBPACK_IMPORTED_MODULE_0__["Manager"](el)
+    hammer.add(new hammerjs__WEBPACK_IMPORTED_MODULE_0__["Pan"]({ direction: hammerjs__WEBPACK_IMPORTED_MODULE_0__["DIRECTION_ALL"], threshold: 10 }))
+    hammer.add(new hammerjs__WEBPACK_IMPORTED_MODULE_0__["Pinch"]({ threshold: 0 }))
 
-        let touch = {
-          pageX: touches[i].pageX,
-          pageY: touches[i].pageY,
-          startX: ongoingTouches[idx].startX,
-          startY: ongoingTouches[idx].startY,
-          deltaX: touches[i].pageX - ongoingTouches[idx].pageX,
-          deltaY: touches[i].pageY - ongoingTouches[idx].pageY,
-          identifier: touches[i].identifier
-        }
-        ongoingTouches.splice(idx, 1, touch)  // swap in the new touch record
-      }
+    hammer.on('panstart', function (e) {
+      pan.lastX = 0
+      pan.lastY = 0
+      pan.deltaX = e.deltaX
+      pan.deltaY = e.deltaY
+    })
+    hammer.on('panmove', function (e) {
+      pan.deltaX = e.deltaX - pan.lastX
+      pan.deltaY = e.deltaY - pan.lastY
+      pan.lastX = e.deltaX
+      pan.lastY = e.deltaY
+    })
 
-    }
+    hammer.on('pinchstart', function () {
+      pitch.scale = 0
+      pitch.lastScale = 1
+    })
+    hammer.on('pinchmove', function (e) {
+      pitch.scale = e.scale / pitch.lastScale - 1
+      pitch.lastScale = e.scale
+    })
 
-    function ongoingTouchIndexById(idToFind) {
-      for (let i = 0; i < ongoingTouches.length; i++) {
-        let id = ongoingTouches[i].identifier
-
-        if (id === idToFind) {
-          return i
-        }
-      }
-      return -1   // not found
-    }
-
-    return ongoingTouches
+    return { pan, pitch }
   }
 
 }
@@ -1128,6 +1076,17 @@ function loadBinary(uri, onprogress) {
 /***/ (function(module, exports) {
 
 module.exports = __WEBPACK_EXTERNAL_MODULE_gl_matrix__;
+
+/***/ }),
+
+/***/ "hammerjs":
+/*!************************************************************************************************!*\
+  !*** external {"root":"Hammer","commonjs":"hammerjs","commonjs2":"hammerjs","amd":"hammerjs"} ***!
+  \************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_hammerjs__;
 
 /***/ })
 

@@ -26,6 +26,12 @@ module.exports = {
         commonjs: 'gl-matrix',
         commonjs2: 'gl-matrix',
         amd: 'gl-matrix'
+      },
+      'hammerjs': {
+        root: 'Hammer',
+        commonjs: 'hammerjs',
+        commonjs2: 'hammerjs',
+        amd: 'hammerjs'
       }
     }
   ]

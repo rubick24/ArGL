@@ -1,4 +1,8 @@
-import { ArGL, FreeMoveCamera, Shader } from './../../dist/argl'
+import { ArGL, OrbitCamera, Shader } from './../../dist/argl'
+
+
+// import { ArGL, OrbitCamera, Shader } from './../../src/index'
+
 import * as glm from 'gl-matrix'
 
 import vs from './shader/pbr.vs'
@@ -11,26 +15,27 @@ import baseColorImg from './assets/rustediron2_basecolor.png'
 import metallicImg from './assets/rustediron2_metallic.png'
 import roughnessImg from './assets/rustediron2_roughness.png'
 
+document.body.style.overflow = 'hidden'
 
-let width = 960
-let height = 540
-let argl = new ArGL({
-  width: width,
-  height: height
+let canvas = document.createElement('canvas')
+document.body.appendChild(canvas)
+canvas.height = 540
+canvas.width = 960
+
+let argl = new ArGL(canvas, {
+  desktopInput: false
 })
-document.body.appendChild(argl.el)
 
 let gl = argl.gl
 gl.enable(gl.DEPTH_TEST)
 gl.enable(gl.CULL_FACE)
 gl.clearColor(0, 0, 0, 1.0)
 
-let camera = new FreeMoveCamera([0.0, 0.0, 5.0], [0, 1, 0, 0])
+let camera = new OrbitCamera([4, 4, 4], [0, 0, 0])
 let shader = new Shader(gl, vs, fs)
 
 let suzanneMesh = argl.loadMesh(suzanneObj)
 let suzan_s_vao = argl.setMeshVAO(suzanneMesh, shader)
-
 
 let lightPositions = [
   -10.0, 10.0, 10.0,
@@ -44,6 +49,10 @@ let lightColors = [
   300.0, 300.0, 300.0,
   300.0, 300.0, 300.0
 ]
+
+// canvas.addEventListener('progress', function (e) {
+//   console.log('progress: '+e.detail)
+// }, false);
 
 let images = [baseColorImg, normalImg, metallicImg, roughnessImg]
 argl.setImageResource(images)
@@ -64,8 +73,9 @@ argl.start()
 //------------
 argl.draw = (time) => {
 
-  let step = argl.deltaTime * 0.005
-  camera.desktopFreeMoveControl(argl.currentlyPressedKeys, step, argl.mouseInput, 0.05)
+  // let step = argl.deltaTime * 0.005
+  // camera.desktopFreeMoveControl(argl.currentlyPressedKeys, step, argl.mouseInput, 0.05)
+  camera.mobileOrbitControl(argl)
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 

@@ -28,8 +28,6 @@ class OrbitCamera extends Camera {
     angleX = direction[0] > 0 ? -angleX : angleX
     let angleY = vec3.length(dirY) === 0 ? 0 : vec3.angle([0, 0, 1], dirY)
     angleY = direction[1] > 0 ? -angleY : angleY
-    console.log(direction, angleX, angleY)
-    console.log(dirX, dirY)
     let orientation = quat.create()
 
     super(position, orientation, zoom)
@@ -58,13 +56,20 @@ class OrbitCamera extends Camera {
 
   }
 
-  orbitControl(argl) {
+  desktopOrbitControl(argl) {
     if (argl.mouseInput.drag) {
       let radianX = argl.mouseInput.dragX / argl.canvas.clientWidth * Math.PI * 2
       let radianY = argl.mouseInput.dragY / argl.canvas.clientHeight * Math.PI * 2
       this.processRotate(radianX, radianY)
     }
     this.processZoom(argl.mouseInput.wheelDeltaY)
+  }
+
+  mobileOrbitControl(argl) {
+    let radianX = argl.touchInput.pan.deltaX / argl.canvas.clientWidth * Math.PI * 2
+    let radianY = argl.touchInput.pan.deltaY / argl.canvas.clientHeight * Math.PI * 2
+    this.processRotate(radianX, radianY)
+    this.processZoom(argl.touchInput.pitch.scale*10000)
   }
 
 }
