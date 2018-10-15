@@ -5,7 +5,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '../dist'),
     library: 'ArGL',
-    libraryTarget: "umd"
+    libraryTarget: 'umd'
   },
   module: {
     rules: [
@@ -32,6 +32,12 @@ module.exports = {
         commonjs: 'hammerjs',
         commonjs2: 'hammerjs',
         amd: 'hammerjs'
+      },
+      'webgl-obj-loader': {
+        root: 'OBJ',
+        commonjs: 'webgl-obj-loader',
+        commonjs2: 'webgl-obj-loader',
+        amd: 'webgl-obj-loader'
       }
     }
   ]

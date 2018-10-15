@@ -16,7 +16,6 @@ class ArGL {
       this.options = defaultOptions
     }
 
-
     this.canvas = canvas
 
     this.loadProgress = 0
@@ -30,7 +29,6 @@ class ArGL {
     this.loadProgresses = new Proxy(this._loadProgresses, {
       set: function (target, key, value, receiver) {
         let sum = self._loadProgresses.reduce((p, v) => { return p + Number(v) }, 0)
-        // console.log('progress: ' + Math.round(sum / self.resourceCount) + '%')
         if (self.resourceCount !== 0 && self.loadProgress !== sum / self.resourceCount) {
           self.loadProgress = sum / self.resourceCount
           let Progress = new CustomEvent('progress', { detail: self.loadProgress })
@@ -61,7 +59,7 @@ class ArGL {
       if (typeof this.options.desktopInput !== 'boolean') {
         dio = this.options.desktopInput
       }
-      let {currentlyPressedKeys, mouseInput} = ArGL.desktopInput(this.canvas, dio)
+      let { currentlyPressedKeys, mouseInput } = ArGL.desktopInput(this.canvas, dio)
       this.currentlyPressedKeys = currentlyPressedKeys
       this.mouseInput = mouseInput
     }
@@ -95,18 +93,10 @@ class ArGL {
     this.draw(time)
 
     if (this.options.touchInput) {
-      this.touchInput.pan.deltaX = 0
-      this.touchInput.pan.deltaY = 0
-      this.touchInput.pitch.scale = 0
+      this.touchInput.reset()
     }
     if (this.options.desktopInput) {
-      this.mouseInput.deltaX = 0
-      this.mouseInput.deltaY = 0
-      if (this.mouseInput.drag) {
-        this.mouseInput.dragX = 0
-        this.mouseInput.dragY = 0
-      }
-      this.mouseInput.wheelDeltaY = 0
+      this.mouseInput.reset()
     }
     requestAnimationFrame(this.render.bind(this))
   }

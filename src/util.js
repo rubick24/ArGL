@@ -52,7 +52,6 @@ export function loadImage(imageUrl, onprogress) {
   })
 }
 
-
 export function loadBinary(uri, onprogress) {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest()

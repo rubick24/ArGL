@@ -31,13 +31,13 @@ export class ArGL {
   })
 
   /**
-   * will be called in render circle
+   * will be called in render loop
    * @param time
    */
   draw(time: number): void
 
   /**
-   * start render circle
+   * start render loop
    */
   start(): void
 

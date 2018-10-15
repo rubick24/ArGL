@@ -76,6 +76,16 @@ export default function Input(Argl) {
       el.addEventListener('blur', removeInputListener)
     }
 
+    mouseInput.reset = function () {
+      this.deltaX = 0
+      this.deltaY = 0
+      if (this.drag) {
+        this.dragX = 0
+        this.dragY = 0
+      }
+      this.wheelDeltaY = 0
+    }
+
     return { currentlyPressedKeys, mouseInput }
   }
 
@@ -117,7 +127,13 @@ export default function Input(Argl) {
       pitch.lastScale = e.scale
     })
 
-    return { pan, pitch }
+    let touchInput = { pan, pitch }
+    touchInput.reset = function () {
+      this.pan.deltaX = 0
+      this.pan.deltaY = 0
+      this.pitch.scale = 0
+    }
+    return touchInput
   }
 
 }

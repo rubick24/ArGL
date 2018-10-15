@@ -1,7 +1,7 @@
-import { ArGL, OrbitCamera, Shader } from './../../dist/argl'
+// import { ArGL, OrbitCamera, Shader } from './../../dist/argl'
 
 
-// import { ArGL, OrbitCamera, Shader } from './../../src/index'
+import { ArGL, OrbitCamera, Shader } from './../../src/index'
 
 import * as glm from 'gl-matrix'
 
@@ -23,7 +23,9 @@ canvas.height = 540
 canvas.width = 960
 
 let argl = new ArGL(canvas, {
-  desktopInput: false
+  desktopInput: {
+    lockPointer: false
+  }
 })
 
 let gl = argl.gl
@@ -75,6 +77,7 @@ argl.draw = (time) => {
 
   // let step = argl.deltaTime * 0.005
   // camera.desktopFreeMoveControl(argl.currentlyPressedKeys, step, argl.mouseInput, 0.05)
+  camera.desktopOrbitControl(argl)
   camera.mobileOrbitControl(argl)
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)

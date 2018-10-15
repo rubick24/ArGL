@@ -6,7 +6,7 @@ module.exports = merge(common, {
   output: {
     filename: 'argl.min.js'
   },
-  plugins: [
-    new UglifyJSPlugin()
-  ]
+  optimization: {
+    minimizer: [new UglifyJSPlugin()]
+  }
 });
