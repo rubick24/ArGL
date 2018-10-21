@@ -52,6 +52,20 @@ export class ArGL {
    */
   loadTexture(): WebGLTexture[]
 
+  /**
+   * vertices for a rectangle using TRIANGLE_STRIP to draw
+   * [positon:vec3] * 4
+   */
+  QuadVertices: number[12]
+  /**
+   * vertices and uvs for a rectangle using TRIANGLE_STRIP to draw
+   * [positon:vec3 + uv:vec2] * 4
+   */
+  QuadVerticesWithUV: number[20]
+  FBVS: string
+  FBFS: string
+  DEPTHFS: string
+
 }
 
 export class Shader {
@@ -143,14 +157,12 @@ export class FreeMoveCamera extends Camera {
 
   /**
    * add desktop free move control
-   * @param currentlyPressedKeys
+   * @param argl
    * @param step
-   * @param mouseInput
    * @param mouseSensitivity
    * @param keys default ['w', 's', 'a', 'd', ' ', 'Shift', 'q', 'e']
    */
-  desktopFreeMoveControl(currentlyPressedKeys: Map<string, boolean>, step: number, mouseInput: any, mouseSensitivity: number, keys: string[]): void
-
+  desktopFreeMoveControl(argl: ArGL, step: number, mouseSensitivity: number, keys: string[]): void
 
 }
 

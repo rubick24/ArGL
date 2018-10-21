@@ -152,7 +152,7 @@ class ArGL {
     let textures = []
     this.resourceCount += this.resource.images.length
     let promises = this.resource.images.map((element, index) => {
-      return ArGL.loadImage(element, (ratio) => {
+      return loadImage(element, (ratio) => {
         this.loadProgresses[index] = ratio
       })
     })

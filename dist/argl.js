@@ -109,9 +109,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _shader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./shader */ "./src/shader.js");
 
 
-function FBhelper(Argl) {
+function FBhelper(ArGL) {
   const quadVertices = [
-    // positions   // texture Coords
+    -1.0, 1.0, 0.0,
+    -1.0, -1.0, 0.0,
+    1.0, 1.0, 0.0,
+    1.0, -1.0, 0.0,
+  ]
+  const quadVerticesWithUV = [
     -1.0, 1.0, 0.0, 0.0, 1.0,
     -1.0, -1.0, 0.0, 0.0, 0.0,
     1.0, 1.0, 0.0, 1.0, 1.0,
@@ -163,14 +168,14 @@ function FBhelper(Argl) {
   }
   `
 
-  Argl.prototype.drawQuad = function (textures) {
+  ArGL.prototype.drawQuad = function (textures) {
     // self.gl.bindVertexArray(null)
     if (this.quadVAO === undefined) {
       this.quadVAO = this.gl.createVertexArray()
       let quadVBO = this.gl.createBuffer()
       this.gl.bindVertexArray(this.quadVAO)
       this.gl.bindBuffer(this.gl.ARRAY_BUFFER, quadVBO)
-      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(quadVertices), this.gl.const_DRAW)
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(quadVerticesWithUV), this.gl.STATIC_DRAW)
       this.gl.enableVertexAttribArray(0)
       this.gl.vertexAttribPointer(0, 3, this.gl.FLOAT, true, 20, 0)
       this.gl.enableVertexAttribArray(1)
@@ -192,7 +197,7 @@ function FBhelper(Argl) {
     this.gl.bindVertexArray(null)
   }
 
-  Argl.prototype.drawFB = function (texture) {
+  ArGL.prototype.drawFB = function (texture) {
     if (this.fbShader === undefined) {
       this.fbShader = new _shader__WEBPACK_IMPORTED_MODULE_0__["default"](this.gl, fbvs, fbfs)
     }
@@ -201,7 +206,7 @@ function FBhelper(Argl) {
     this.drawQuad([texture])
   }
 
-  Argl.prototype.drawDepth = function (texture) {
+  ArGL.prototype.drawDepth = function (texture) {
     if (this.fbShader === undefined) {
       this.fbShader = new _shader__WEBPACK_IMPORTED_MODULE_0__["default"](this.gl, fbvs, depthFS)
     }
@@ -209,6 +214,12 @@ function FBhelper(Argl) {
     this.fbShader.setInt('depthMap', 0)
     this.drawQuad([texture])
   }
+
+  ArGL.prototype.QuadVertices = quadVertices
+  ArGL.prototype.QuadVerticesWithUV = quadVerticesWithUV
+  ArGL.prototype.FBVS = fbvs
+  ArGL.prototype.FBFS = fbvs
+  ArGL.prototype.DEPTHFS = depthFS
 }
 
 
@@ -382,7 +393,7 @@ class ArGL {
     let textures = []
     this.resourceCount += this.resource.images.length
     let promises = this.resource.images.map((element, index) => {
-      return ArGL.loadImage(element, (ratio) => {
+      return Object(_util__WEBPACK_IMPORTED_MODULE_1__["loadImage"])(element, (ratio) => {
         this.loadProgresses[index] = ratio
       })
     })
@@ -436,10 +447,8 @@ class Camera {
 
   getViewMatrix() {
     this.update()
-    let view = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["mat4"].create()
-    let center = [0, 0, 0]
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].add(center, this.position, this.front)
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["mat4"].lookAt(view, this.position, center, this.up)
+    let center = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["vec3"].add([], this.position, this.front)
+    let view = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["mat4"].lookAt([], this.position, center, this.up)
     return view
   }
 
@@ -449,9 +458,7 @@ class Camera {
   }
 
   rotate(angle, axis) {
-    let t = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["quat"].create()
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["quat"].setAxisAngle(t, axis, angle)
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["quat"].mul(this.orientation, this.orientation, t)
+    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["quat"].mul(this.orientation, this.orientation, gl_matrix__WEBPACK_IMPORTED_MODULE_0__["quat"].setAxisAngle([], axis, angle))
     // this.orientation *= glm.angleAxis(angle, axis * this.orientation)
     this.update()
   }
@@ -467,8 +474,7 @@ class Camera {
   }
 
   update() {
-    let m = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["mat4"].create()
-    gl_matrix__WEBPACK_IMPORTED_MODULE_0__["mat4"].fromQuat(m, this.orientation)
+    let m = gl_matrix__WEBPACK_IMPORTED_MODULE_0__["mat4"].fromQuat([], this.orientation)
     this.right = [-m[0], -m[4], -m[8]]
     this.up = [m[1], m[5], m[9]]
     this.front = [m[2], m[6], m[10]]
@@ -517,35 +523,28 @@ const CameraMovement = {
 class FreeMoveCamera extends _camera__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
   processMove(direction, step) {
-    let dirvec = gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].create()
     if (direction == FreeMoveCamera.Movement.FORWARD) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale(dirvec, this.front, step)
-      this.translate(dirvec)
+      this.translate(gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale([], this.front, step))
     }
     if (direction == FreeMoveCamera.Movement.BACKWARD) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale(dirvec, this.front, -step)
-      this.translate(dirvec)
+      this.translate(gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale([], this.front, -step))
     }
     if (direction == FreeMoveCamera.Movement.LEFT) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale(dirvec, this.right, -step)
-      this.translate(dirvec)
+      this.translate(gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale([], this.right, -step))
     }
     if (direction == FreeMoveCamera.Movement.RIGHT) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale(dirvec, this.right, step)
-      this.translate(dirvec)
+      this.translate(gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale([], this.right, step))
     }
     if (direction == FreeMoveCamera.Movement.UP) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale(dirvec, this.up, step)
-      this.translate(dirvec)
+      this.translate(gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale([], this.up, step))
     }
     if (direction == FreeMoveCamera.Movement.DOWN) {
-      gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale(dirvec, this.up, -step)
-      this.translate(dirvec)
+      this.translate(gl_matrix__WEBPACK_IMPORTED_MODULE_1__["vec3"].scale([], this.up, -step))
     }
   }
 
-
-  desktopFreeMoveControl(currentlyPressedKeys, step, mouseInput, mouseSensitivity, keys = ['w', 's', 'a', 'd', ' ', 'Shift', 'q', 'e']) {
+  desktopFreeMoveControl(argl, step, mouseSensitivity, keys = ['w', 's', 'a', 'd', ' ', 'Shift', 'q', 'e']) {
+    let currentlyPressedKeys = argl.currentlyPressedKeys
     if (currentlyPressedKeys.get(keys[0])) {
       this.processMove(FreeMoveCamera.Movement.FORWARD, step)
     }
@@ -566,20 +565,28 @@ class FreeMoveCamera extends _camera__WEBPACK_IMPORTED_MODULE_0__["default"] {
     }
 
     let toRadian = degree => degree / 180 * Math.PI
-    if (currentlyPressedKeys.get(keys[6])) {
+    if (argl.currentlyPressedKeys.get(keys[6])) {
       this.roll(toRadian(-step * 5))
     }
-    if (currentlyPressedKeys.get(keys[7])) {
+    if (argl.currentlyPressedKeys.get(keys[7])) {
       this.roll(toRadian(step * 5))
     }
 
-    let radianX = toRadian(mouseInput.deltaX * mouseSensitivity)
-    let radianY = toRadian(mouseInput.deltaY * mouseSensitivity)
+    if (argl.options.desktopInput && argl.options.desktopInput.lockPointer !== false) {
+      let radianX = toRadian(argl.mouseInput.deltaX * mouseSensitivity)
+      let radianY = toRadian(argl.mouseInput.deltaY * mouseSensitivity)
+      this.pitch(radianY)
+      this.rotate(radianX, [0, 1, 0])
+    } else {
+      if (argl.mouseInput.drag) {
+        let radianX = argl.mouseInput.dragX / argl.canvas.clientWidth * Math.PI * 2
+        let radianY = argl.mouseInput.dragY / argl.canvas.clientHeight * Math.PI * 2
+        this.pitch(radianY)
+        this.rotate(radianX, [0, 1, 0])
+      }
+    }
 
-
-    this.pitch(radianY)
-    this.rotate(radianX, [0, 1, 0])
-    this.processZoom(mouseInput.wheelDeltaY)
+    this.processZoom(argl.mouseInput.wheelDeltaY)
   }
 
 }
@@ -673,7 +680,7 @@ class OrbitCamera extends _camera__WEBPACK_IMPORTED_MODULE_0__["default"] {
     let radianX = argl.touchInput.pan.deltaX / argl.canvas.clientWidth * Math.PI * 2
     let radianY = argl.touchInput.pan.deltaY / argl.canvas.clientHeight * Math.PI * 2
     this.processRotate(radianX, radianY)
-    this.processZoom(argl.touchInput.pitch.scale*10000)
+    this.processZoom(argl.touchInput.pitch.scale * 10000)
   }
 
 }

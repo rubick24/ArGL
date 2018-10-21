@@ -1,8 +1,13 @@
 import Shader from './shader'
 
-export default function FBhelper(Argl) {
+export default function FBhelper(ArGL) {
   const quadVertices = [
-    // positions   // texture Coords
+    -1.0, 1.0, 0.0,
+    -1.0, -1.0, 0.0,
+    1.0, 1.0, 0.0,
+    1.0, -1.0, 0.0,
+  ]
+  const quadVerticesWithUV = [
     -1.0, 1.0, 0.0, 0.0, 1.0,
     -1.0, -1.0, 0.0, 0.0, 0.0,
     1.0, 1.0, 0.0, 1.0, 1.0,
@@ -54,14 +59,14 @@ export default function FBhelper(Argl) {
   }
   `
 
-  Argl.prototype.drawQuad = function (textures) {
+  ArGL.prototype.drawQuad = function (textures) {
     // self.gl.bindVertexArray(null)
     if (this.quadVAO === undefined) {
       this.quadVAO = this.gl.createVertexArray()
       let quadVBO = this.gl.createBuffer()
       this.gl.bindVertexArray(this.quadVAO)
       this.gl.bindBuffer(this.gl.ARRAY_BUFFER, quadVBO)
-      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(quadVertices), this.gl.const_DRAW)
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(quadVerticesWithUV), this.gl.STATIC_DRAW)
       this.gl.enableVertexAttribArray(0)
       this.gl.vertexAttribPointer(0, 3, this.gl.FLOAT, true, 20, 0)
       this.gl.enableVertexAttribArray(1)
@@ -83,7 +88,7 @@ export default function FBhelper(Argl) {
     this.gl.bindVertexArray(null)
   }
 
-  Argl.prototype.drawFB = function (texture) {
+  ArGL.prototype.drawFB = function (texture) {
     if (this.fbShader === undefined) {
       this.fbShader = new Shader(this.gl, fbvs, fbfs)
     }
@@ -92,7 +97,7 @@ export default function FBhelper(Argl) {
     this.drawQuad([texture])
   }
 
-  Argl.prototype.drawDepth = function (texture) {
+  ArGL.prototype.drawDepth = function (texture) {
     if (this.fbShader === undefined) {
       this.fbShader = new Shader(this.gl, fbvs, depthFS)
     }
@@ -100,4 +105,10 @@ export default function FBhelper(Argl) {
     this.fbShader.setInt('depthMap', 0)
     this.drawQuad([texture])
   }
+
+  ArGL.prototype.QuadVertices = quadVertices
+  ArGL.prototype.QuadVerticesWithUV = quadVerticesWithUV
+  ArGL.prototype.FBVS = fbvs
+  ArGL.prototype.FBFS = fbvs
+  ArGL.prototype.DEPTHFS = depthFS
 }

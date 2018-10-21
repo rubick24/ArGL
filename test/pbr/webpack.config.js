@@ -3,10 +3,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './examples/pbr/index.js',
+  entry: './test/pbr/index.js',
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, './dist')
+    path: path.resolve(__dirname, 'dist')
   },
   module: {
     rules: [
@@ -24,7 +24,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'examples/pbr/index.html'
+      template: 'test/pbr/index.html'
     })
   ],
   devtool: 'inline-source-map',

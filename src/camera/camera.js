@@ -10,10 +10,8 @@ class Camera {
 
   getViewMatrix() {
     this.update()
-    let view = mat4.create()
-    let center = [0, 0, 0]
-    vec3.add(center, this.position, this.front)
-    mat4.lookAt(view, this.position, center, this.up)
+    let center = vec3.add([], this.position, this.front)
+    let view = mat4.lookAt([], this.position, center, this.up)
     return view
   }
 
@@ -23,9 +21,7 @@ class Camera {
   }
 
   rotate(angle, axis) {
-    let t = quat.create()
-    quat.setAxisAngle(t, axis, angle)
-    quat.mul(this.orientation, this.orientation, t)
+    quat.mul(this.orientation, this.orientation, quat.setAxisAngle([], axis, angle))
     // this.orientation *= glm.angleAxis(angle, axis * this.orientation)
     this.update()
   }
@@ -41,8 +37,7 @@ class Camera {
   }
 
   update() {
-    let m = mat4.create()
-    mat4.fromQuat(m, this.orientation)
+    let m = mat4.fromQuat([], this.orientation)
     this.right = [-m[0], -m[4], -m[8]]
     this.up = [m[1], m[5], m[9]]
     this.front = [m[2], m[6], m[10]]

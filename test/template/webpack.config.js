@@ -3,10 +3,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './examples/pick_test/index.js',
+  entry: './test/template/index.js',
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, './dist')
+    path: path.resolve(__dirname, 'dist')
   },
   module: {
     rules: [
@@ -24,10 +24,10 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'examples/pick_test/index.html'
+      template: 'test/template/index.html'
     })
   ],
-  devtool: 'source-map',
+  devtool: 'inline-source-map',
   devServer: {
     contentBase: '../dist',
     //open: flase,

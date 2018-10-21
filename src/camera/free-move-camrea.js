@@ -14,35 +14,28 @@ const CameraMovement = {
 class FreeMoveCamera extends Camera {
 
   processMove(direction, step) {
-    let dirvec = vec3.create()
     if (direction == FreeMoveCamera.Movement.FORWARD) {
-      vec3.scale(dirvec, this.front, step)
-      this.translate(dirvec)
+      this.translate(vec3.scale([], this.front, step))
     }
     if (direction == FreeMoveCamera.Movement.BACKWARD) {
-      vec3.scale(dirvec, this.front, -step)
-      this.translate(dirvec)
+      this.translate(vec3.scale([], this.front, -step))
     }
     if (direction == FreeMoveCamera.Movement.LEFT) {
-      vec3.scale(dirvec, this.right, -step)
-      this.translate(dirvec)
+      this.translate(vec3.scale([], this.right, -step))
     }
     if (direction == FreeMoveCamera.Movement.RIGHT) {
-      vec3.scale(dirvec, this.right, step)
-      this.translate(dirvec)
+      this.translate(vec3.scale([], this.right, step))
     }
     if (direction == FreeMoveCamera.Movement.UP) {
-      vec3.scale(dirvec, this.up, step)
-      this.translate(dirvec)
+      this.translate(vec3.scale([], this.up, step))
     }
     if (direction == FreeMoveCamera.Movement.DOWN) {
-      vec3.scale(dirvec, this.up, -step)
-      this.translate(dirvec)
+      this.translate(vec3.scale([], this.up, -step))
     }
   }
 
-
-  desktopFreeMoveControl(currentlyPressedKeys, step, mouseInput, mouseSensitivity, keys = ['w', 's', 'a', 'd', ' ', 'Shift', 'q', 'e']) {
+  desktopFreeMoveControl(argl, step, mouseSensitivity, keys = ['w', 's', 'a', 'd', ' ', 'Shift', 'q', 'e']) {
+    let currentlyPressedKeys = argl.currentlyPressedKeys
     if (currentlyPressedKeys.get(keys[0])) {
       this.processMove(FreeMoveCamera.Movement.FORWARD, step)
     }
@@ -63,20 +56,28 @@ class FreeMoveCamera extends Camera {
     }
 
     let toRadian = degree => degree / 180 * Math.PI
-    if (currentlyPressedKeys.get(keys[6])) {
+    if (argl.currentlyPressedKeys.get(keys[6])) {
       this.roll(toRadian(-step * 5))
     }
-    if (currentlyPressedKeys.get(keys[7])) {
+    if (argl.currentlyPressedKeys.get(keys[7])) {
       this.roll(toRadian(step * 5))
     }
 
-    let radianX = toRadian(mouseInput.deltaX * mouseSensitivity)
-    let radianY = toRadian(mouseInput.deltaY * mouseSensitivity)
+    if (argl.options.desktopInput && argl.options.desktopInput.lockPointer !== false) {
+      let radianX = toRadian(argl.mouseInput.deltaX * mouseSensitivity)
+      let radianY = toRadian(argl.mouseInput.deltaY * mouseSensitivity)
+      this.pitch(radianY)
+      this.rotate(radianX, [0, 1, 0])
+    } else {
+      if (argl.mouseInput.drag) {
+        let radianX = argl.mouseInput.dragX / argl.canvas.clientWidth * Math.PI * 2
+        let radianY = argl.mouseInput.dragY / argl.canvas.clientHeight * Math.PI * 2
+        this.pitch(radianY)
+        this.rotate(radianX, [0, 1, 0])
+      }
+    }
 
-
-    this.pitch(radianY)
-    this.rotate(radianX, [0, 1, 0])
-    this.processZoom(mouseInput.wheelDeltaY)
+    this.processZoom(argl.mouseInput.wheelDeltaY)
   }
 
 }

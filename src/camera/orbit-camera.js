@@ -69,7 +69,7 @@ class OrbitCamera extends Camera {
     let radianX = argl.touchInput.pan.deltaX / argl.canvas.clientWidth * Math.PI * 2
     let radianY = argl.touchInput.pan.deltaY / argl.canvas.clientHeight * Math.PI * 2
     this.processRotate(radianX, radianY)
-    this.processZoom(argl.touchInput.pitch.scale*10000)
+    this.processZoom(argl.touchInput.pitch.scale * 10000)
   }
 
 }
