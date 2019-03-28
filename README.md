@@ -4,6 +4,16 @@ personal WebGL helper library
 
 [Demos](https://arthas.me/argl-demos)
 
-## Usage
+## TODO
+
+- gltf-loader
+  - set camera distance and projection distance by model size
+  - default material
+  - animations
+  - skin & joints
+  - morph targets
+  - IBL
+
+## Usage [need update]
 
 check [ArGL-demos](https://github.com/Deadalusmask/ArGL-demos) for examples
