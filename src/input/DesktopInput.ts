@@ -15,7 +15,7 @@ export interface IMouseInput {
 }
 
 interface IPLE extends HTMLElement {
-  requestPointerLock?: () => void
+  // requestPointerLock: () => void // HTMLElement type alrdy has this now
   exitPointerLock?: () => void
   mozRequestPointerLock?: () => void
   mozExitPointerLock?: () => void
@@ -23,17 +23,20 @@ interface IPLE extends HTMLElement {
 
 export default class DesktopInput implements IArGLPlugin {
   public el: HTMLElement
-  public options: {
-    lockPointer: boolean
-  }
+  public lockPointer: boolean
   public currentlyPressedKeys: Map<string, boolean>
   public mouseInput: IMouseInput
   // public processBeforeRender?: Array<() => void>
   public processAfterRender: Array<() => void>
 
-  constructor(el: IPLE, options: { lockPointer: boolean }) {
+  constructor(el: IPLE, options?: { lockPointer?: boolean }) {
     this.el = el
-    this.options = options
+    if (options) {
+      if (options.lockPointer !== undefined) {
+        this.lockPointer = options.lockPointer
+      }
+    }
+
     this.currentlyPressedKeys = new Map()
     this.mouseInput = {
       move: {
@@ -100,7 +103,7 @@ export default class DesktopInput implements IArGLPlugin {
       document.removeEventListener('wheel', handleWheel)
     }
 
-    if (options.lockPointer) {
+    if (this.lockPointer) {
       el.requestPointerLock = el.requestPointerLock || el.mozRequestPointerLock
       el.exitPointerLock = el.exitPointerLock || el.mozExitPointerLock
       el.onclick = () => {

@@ -39,14 +39,14 @@ export default function getCurrentValue(
         bk: vec3
       }
       const preVal: ICubic = {
-        ak: vec3.fromValues.apply(vec3, d.slice(pi, pi + 3)),
-        vk: vec3.fromValues.apply(vec3, d.slice(pi + 3, pi + 6)),
-        bk: vec3.fromValues.apply(vec3, d.slice(pi + 6, pi + 9))
+        ak: vec3.fromValues(d[pi], d[pi + 1], d[pi + 2]),
+        vk: vec3.fromValues(d[pi + 3], d[pi + 4], d[pi + 5]),
+        bk: vec3.fromValues(d[pi + 6], d[pi + 7], d[pi + 8])
       }
       const nextVal: ICubic = {
-        ak: vec3.fromValues.apply(vec3, d.slice(ni, ni + 3)),
-        vk: vec3.fromValues.apply(vec3, d.slice(ni + 3, ni + 6)),
-        bk: vec3.fromValues.apply(vec3, d.slice(ni + 6, ni + 9))
+        ak: vec3.fromValues(d[ni], d[ni + 1], d[ni + 2]),
+        vk: vec3.fromValues(d[ni + 3], d[ni + 4], d[ni + 5]),
+        bk: vec3.fromValues(d[ni + 6], d[ni + 7], d[ni + 8])
       }
       const p0 = preVal.vk
       const p1 = nextVal.vk
@@ -61,8 +61,8 @@ export default function getCurrentValue(
     } else {
       const pi = prevIndex * 3
       const ni = nextIndex * 3
-      const preVal = vec3.fromValues.apply(vec3, d.slice(pi, pi + 3))
-      const nextVal = vec3.fromValues.apply(vec3, d.slice(ni, ni + 3))
+      const preVal = vec3.fromValues(d[pi], d[pi + 1], d[pi + 2])
+      const nextVal = vec3.fromValues(d[ni], d[ni + 1], d[ni + 2])
 
       if (sampler.interpolation === 'LINEAR') {
         return vec3.lerp(vec3.create(), preVal, nextVal, t)

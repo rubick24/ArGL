@@ -1,4 +1,4 @@
-import { vec3, quat, mat4, glMatrix } from 'gl-matrix'
+import { vec3, mat4, glMatrix } from 'gl-matrix'
 import DesktopInput from '../input/DesktopInput'
 
 enum DIRECTION {
@@ -10,33 +10,38 @@ enum DIRECTION {
   DOWN
 }
 
-export default class FreeMoveCamera {
+export default class UniversalCamera {
+  public worldUp = vec3.fromValues(0, 1, 0)
   public minZoom = 1
   public maxZoom = 90
 
   constructor(
-    public position = vec3.fromValues(0, 0, 0),
-    public orientation = quat.fromValues(0, 0, 0, 1),
+    public position: vec3,
+    public yaw = 0,
+    public pitch = 0,
     public zoom = 45
-  ) {
-    zoom = zoom > this.minZoom ? zoom : this.minZoom
-    zoom = zoom < this.maxZoom ? zoom : this.maxZoom
-    this.zoom = zoom
-  }
-
+  ) {}
   public get right() {
-    const m = mat4.fromQuat(mat4.create(), this.orientation)
-    return vec3.fromValues(-m[0], -m[4], -m[8])
+    const right = vec3.create()
+    vec3.cross(right, this.front, this.worldUp)
+    vec3.normalize(right, right)
+    return right
   }
 
   public get up() {
-    const m = mat4.fromQuat(mat4.create(), this.orientation)
-    return vec3.fromValues(m[1], m[5], m[9])
+    const up = vec3.create()
+    vec3.cross(up, this.right, this.front)
+    vec3.normalize(up, up)
+    return up
   }
 
   public get front() {
-    const m = mat4.fromQuat(mat4.create(), this.orientation)
-    return vec3.fromValues(m[2], m[6], m[10])
+    const front = vec3.create()
+    front[0] = Math.cos(this.yaw) * Math.cos(this.pitch)
+    front[1] = Math.sin(this.pitch)
+    front[2] = Math.sin(this.yaw) * Math.cos(this.pitch)
+    vec3.normalize(front, front)
+    return front
   }
 
   public get viewMatrix() {
@@ -54,31 +59,9 @@ export default class FreeMoveCamera {
       far
     )
   }
-
   public translate(v: vec3) {
     vec3.add(this.position, this.position, v)
     // this.position += v * this.orientation
-  }
-
-  public rotate(angle: number, axis: vec3) {
-    quat.mul(
-      this.orientation,
-      this.orientation,
-      quat.setAxisAngle(quat.create(), axis, angle)
-    )
-    // this.orientation *= glm.angleAxis(angle, axis * this.orientation)
-  }
-
-  public yaw(angle: number) {
-    this.rotate(angle, this.up)
-  }
-
-  public pitch(angle: number) {
-    this.rotate(angle, this.right)
-  }
-
-  public roll(angle: number) {
-    this.rotate(angle, this.front)
   }
 
   public zoomOut(deltaZoom: number) {
@@ -146,25 +129,23 @@ export default class FreeMoveCamera {
     }
 
     const toRadian = (degree: number) => (degree / 180) * Math.PI
-    if (di.currentlyPressedKeys.get(keys[6])) {
-      this.roll(toRadian(-step * 5))
-    }
-    if (di.currentlyPressedKeys.get(keys[7])) {
-      this.roll(toRadian(step * 5))
-    }
 
     if (di.lockPointer) {
       const radianX = toRadian(di.mouseInput.move.x * mouseSensitivity)
       const radianY = toRadian(di.mouseInput.move.y * mouseSensitivity)
-      this.pitch(radianY)
-      this.rotate(radianX, vec3.fromValues(0, 1, 0))
+      this.yaw += radianX
+      this.pitch -= radianY
     } else if (di.mouseInput.drag) {
       const radianX = (di.mouseInput.drag.x / di.el.clientWidth) * Math.PI * 2
       const radianY = (di.mouseInput.drag.y / di.el.clientHeight) * Math.PI * 2
-      this.pitch(radianY)
-      this.rotate(radianX, vec3.fromValues(0, 1, 0))
+      this.yaw += radianX
+      this.pitch -= radianY
     }
-
+    if (this.pitch > Math.PI / 2) {
+      this.pitch = Math.PI / 2 - 0.00001
+    } else if (this.pitch < -Math.PI / 2) {
+      this.pitch = -Math.PI / 2 + 0.00001
+    }
     this.zoomOut(di.mouseInput.wheel)
   }
 }

@@ -1,6 +1,5 @@
 import GLTFLoader from '.'
-import { mat4, glMatrix, quat, vec3 } from 'gl-matrix'
-import Camera from '../../camera/Camera'
+import { mat4, quat, vec3 } from 'gl-matrix'
 
 export const renderArgs = {
   viewMat: mat4.create(),
@@ -18,7 +17,7 @@ export function renderScene(
   const transformMat = mat4.create()
 
   this.renderArgs.camPos = camera.position
-  this.renderArgs.viewMat = camera.getViewMatrix()
+  this.renderArgs.viewMat = camera.viewMatrix
   this.renderArgs.projectionMat = camera.getProjectionMatrix(
     gl.canvas.clientWidth / gl.canvas.clientHeight,
     0.1,
@@ -80,12 +79,12 @@ export function renderNode(
             const v = this.getCurrentValue((time / 1000) % duration, a, c)
 
             if (c.target.path === 'scale') {
-              mat4.scale(modelMat, modelMat, v)
+              mat4.scale(modelMat, modelMat, v as vec3)
             } else if (c.target.path === 'translation') {
-              mat4.translate(modelMat, modelMat, v)
+              mat4.translate(modelMat, modelMat, v as vec3)
             } else if (c.target.path === 'rotation') {
               const rotateAni = mat4.create()
-              mat4.fromQuat(rotateAni, v)
+              mat4.fromQuat(rotateAni, v as quat)
               mat4.mul(modelMat, modelMat, rotateAni)
             }
           }
