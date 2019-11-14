@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
-    "noImplicitAny": true,
-    "module": "es6",
-    "moduleResolution": "node",
-    "target": "es6",
-    "jsx": "react",
-    "allowJs": true
+      "sourceMap": true,
+      "strict": true,
+      "target": "es6",
+      "lib": [
+        "dom",
+        "es2015"
+      ],
+      "types": [
+        "webpack-env"
+      ]
   }
 }

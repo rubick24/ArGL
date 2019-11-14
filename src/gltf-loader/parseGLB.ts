@@ -1,11 +1,11 @@
-import GLTFLoader from '.'
+import { GlTF } from '../types/glTF'
 
 const ASCII_GLTF = 0x46546c67 // glTF
 const ASCII_JSON = 0x4e4f534a // JSON
 const ASCII_BIN = 0x004e4942 //  BIN
 
-export default async function parseGLB(this: GLTFLoader) {
-  const glb = await fetch(this.url).then(res => res.arrayBuffer())
+export default async (url: string): Promise<[GlTF, ArrayBuffer[]]> => {
+  const glb = await fetch(url).then(res => res.arrayBuffer())
 
   const header = new DataView(glb, 0, 12)
   if (header.getUint32(0, true) !== ASCII_GLTF) {
@@ -25,21 +25,22 @@ export default async function parseGLB(this: GLTFLoader) {
   }
   const jsonChunkContent = new DataView(glb, 20, jsonChunkLength)
   const textDecoder = new TextDecoder('utf-8')
-  this.json = JSON.parse(textDecoder.decode(jsonChunkContent))
+  const json = JSON.parse(textDecoder.decode(jsonChunkContent)) as GlTF
 
   // file header 12 byte + chunk header 8 byte + chunk data length
   let currentLength = 20 + jsonChunkLength
 
   if (currentLength >= length) {
-    return this
+    throw new Error('glTFLoader: glb parsing error')
   }
 
   const chunkHeader = new DataView(glb, currentLength, 8)
   const chunkLength = chunkHeader.getUint32(0, true)
   if (chunkHeader.getUint32(4, true) !== ASCII_BIN) {
-    return this
+    throw new Error('glTFLoader: second chunk of glb must be BIN chunk')
   }
   // pass chunk header
   currentLength += 8
-  this.buffers = [glb.slice(currentLength, currentLength + chunkLength)]
+  const buffers = [glb.slice(currentLength, currentLength + chunkLength)]
+  return [json, buffers]
 }

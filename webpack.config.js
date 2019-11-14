@@ -1,13 +1,13 @@
 const path = require('path')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
-  entry: './src/index.ts',
-  output: {
-    filename: 'argl.js',
-    path: path.resolve(__dirname, './dist'),
-    library: 'ArGL',
-    libraryTarget: 'umd'
+  devtool: 'inline-source-map',
+	entry: './src/index.ts',
+	output: {
+		filename: 'main.js',
+		path: path.resolve(__dirname, 'dist')
   },
   resolve: {
     extensions: ['.wasm', '.mjs', '.js', '.json', '.ts', '.tsx']
@@ -15,18 +15,8 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.ts$/,
-        enforce: 'pre',
-        use: [
-          {
-            loader: 'tslint-loader'
-          }
-        ]
-      },
-      {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
+        loader: 'ts-loader'
       },
       {
         test: /\.(glsl|vert|frag|txt)$/,
@@ -34,6 +24,16 @@ module.exports = {
       }
     ]
   },
-
-  plugins: [new CleanWebpackPlugin()]
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      template: 'src/index.html'
+    })
+  ],
+  devServer: {
+    port: 8000,
+    hot: true,
+    disableHostCheck: true,
+    contentBase: path.join(__dirname, 'public')
+  }
 }

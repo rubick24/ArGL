@@ -1,19 +1,24 @@
 import { vec3, mat4, glMatrix } from 'gl-matrix'
 import DesktopInput from '../input/DesktopInput'
-import TouchInput from '../input/TouchInput'
+// import TouchInput from '../input/TouchInput'
 
-export default class ArcRotateCamre {
-  public rotationMatrix = mat4.identity(mat4.create())
+const up = vec3.fromValues(0, 1, 0)
+
+export default class ArcRotateCamera {
+  public rotationMatrix: Float32Array = mat4.identity(mat4.create())
   public maxAlphaLimit = Math.PI * 2
   public minAlphaLimit = -Math.PI * 2
   public maxBetaLimit = Math.PI
   public minBetaLimit = 0
 
-  private _viewMaxtrix = mat4.create()
-  private _position = vec3.create()
+  private _viewMaxtrix: Float32Array = mat4.create()
+  private _position: Float32Array = vec3.create()
+  private _tempMat4: Float32Array = mat4.create()
+  private _tempAxis: Float32Array = vec3.create()
+  private _tempUp: Float32Array = vec3.create()
 
   constructor(
-    public target: vec3,
+    public target: Float32Array,
     public alpha: number,
     public beta: number,
     public radius: number,
@@ -43,7 +48,10 @@ export default class ArcRotateCamre {
 
   public get up() {
     const m = this.rotationMatrix
-    return vec3.fromValues(m[1], m[5], m[9])
+    this._tempUp[0] = m[1]
+    this._tempUp[1] = m[5]
+    this._tempUp[2] = m[9]
+    return this._tempUp
   }
 
   public _checkLimit() {
@@ -67,28 +75,26 @@ export default class ArcRotateCamre {
     const cosb = Math.cos(this.beta)
     const sinb = Math.sin(this.beta) !== 0 ? Math.sin(this.beta) : 0.0001
 
-    const up = vec3.fromValues(0, 1, 0)
-    const axis = vec3.create()
     if (!vec3.equals(this.up, up)) {
-      vec3.cross(axis, up, this.up)
-      vec3.normalize(axis, axis)
-      const angle = Math.acos(vec3.dot(up, axis))
-      this.rotationMatrix = mat4.fromRotation(mat4.create(), angle, axis)
+      vec3.cross(this._tempAxis, up, this.up)
+      vec3.normalize(this._tempAxis, this._tempAxis)
+      const angle = Math.acos(vec3.dot(up, this._tempAxis))
+      mat4.fromRotation(this.rotationMatrix, angle, this._tempAxis)
     }
     const trans = vec3.fromValues(
       this.radius * cosa * sinb,
       this.radius * cosb,
       this.radius * sina * sinb
     )
-    vec3.normalize(axis, trans)
+    // vec3.normalize(trans, trans)
     vec3.transformMat4(trans, trans, this.rotationMatrix)
-    this._position = vec3.add(this._position, this.target, trans)
+    vec3.add(this._position, this.target, trans)
     mat4.lookAt(this._viewMaxtrix, this.position, this.target, this.up)
   }
 
-  public getProjectionMatrix(aspect: number, near: number, far: number) {
+  public getProjectionMatrix(aspect: number, near: number, far: number): Float32Array {
     return mat4.perspective(
-      mat4.create(),
+      this._tempMat4,
       glMatrix.toRadian(45),
       aspect,
       near,
@@ -97,9 +103,11 @@ export default class ArcRotateCamre {
   }
 
   public processDesktopInput(di: DesktopInput) {
-    if (di.mouseInput.drag) {
-      const radianX = (di.mouseInput.drag.x / di.el.clientWidth) * Math.PI * 2
-      const radianY = -(di.mouseInput.drag.y / di.el.clientHeight) * Math.PI * 2
+    if (di.mouseInput.draging) {
+      const deltaX = di.mouseInput.x - di.mouseInput.lastX
+      const deltaY = di.mouseInput.y - di.mouseInput.lastY
+      const radianX = (deltaX / di.el.clientWidth) * Math.PI * 2
+      const radianY = -(deltaY / di.el.clientHeight) * Math.PI * 2
       this.alpha += radianX
       this.beta += radianY
     }
@@ -107,12 +115,12 @@ export default class ArcRotateCamre {
     // di.mouseInput.wheel
   }
 
-  public processTouchInput(di: TouchInput) {
-    const radianX = (di.touchInput.pan.deltaX / di.el.clientWidth) * Math.PI * 2
-    const radianY =
-      -(di.touchInput.pan.deltaY / di.el.clientHeight) * Math.PI * 2
-    this.alpha += radianX
-    this.beta += radianY
-    // and here
-  }
+  // public processTouchInput(di: TouchInput) {
+  //   const radianX = (di.touchInput.pan.deltaX / di.el.clientWidth) * Math.PI * 2
+  //   const radianY =
+  //     -(di.touchInput.pan.deltaY / di.el.clientHeight) * Math.PI * 2
+  //   this.alpha += radianX
+  //   this.beta += radianY
+  //   // and here
+  // }
 }
