@@ -12,6 +12,7 @@ export default class DesktopInput {
   public lockPointer: boolean = false
   public currentlyPressedKeys: Map<string, boolean>
   public mouseInput: IMouseInput
+  private raf = 0
 
   constructor(public el: HTMLElement, options?: { lockPointer?: boolean }) {
     this.el = el
@@ -40,13 +41,10 @@ export default class DesktopInput {
     }
 
     const handleMouseMove = (e: MouseEvent) => {
-      this.mouseInput.lastX = this.mouseInput.x
-      this.mouseInput.lastY = this.mouseInput.y
       this.mouseInput.x = e.screenX
       this.mouseInput.y = e.screenY
     }
     const handleWheel = (e: WheelEvent) => {
-      this.mouseInput.lastWheel = this.mouseInput.wheel
       this.mouseInput.wheel += e.deltaY
     }
     const handleDragStart = () => {
@@ -62,6 +60,13 @@ export default class DesktopInput {
       document.addEventListener('mousedown', handleDragStart)
       document.addEventListener('mouseup', handleDragEnd)
       document.addEventListener('wheel', handleWheel)
+      const af = () => {
+        this.mouseInput.lastX = this.mouseInput.x
+        this.mouseInput.lastY = this.mouseInput.y
+        this.mouseInput.lastWheel = this.mouseInput.wheel
+        requestAnimationFrame(af)
+      }
+      this.raf = requestAnimationFrame(af)
     }
     const removeInputListener = () => {
       document.removeEventListener('keydown', handleKeyDown)
@@ -70,6 +75,7 @@ export default class DesktopInput {
       document.removeEventListener('mousedown', handleDragStart)
       document.removeEventListener('mouseup', handleDragEnd)
       document.removeEventListener('wheel', handleWheel)
+      cancelAnimationFrame(this.raf)
     }
 
     if (this.lockPointer) {
