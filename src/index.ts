@@ -33,7 +33,7 @@ const start = async () => {
     render(gl, scenes[0], camera)
     requestAnimationFrame(renderLoop)
   }
-  renderLoop(0)
+  requestAnimationFrame(renderLoop)
 }
 
 start()

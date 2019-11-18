@@ -5,8 +5,10 @@ import getImages from './getImages'
 import getMeshes from './getMeshes'
 import getMaterials from './getMaterials'
 import getScenes from './getScenes'
+import getAnimations from './getAnimations'
 import draw from './draw'
 import render from './render'
+import animate from './animate'
 // interface IGlTFExpose {
 //   scene: object
 //   meshes: object[]
@@ -65,11 +67,13 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
 
   const scenes = getScenes(json, meshes)
 
+  const animations = getAnimations(json, accessors)
+
   return {
     // scene,
     scenes,
     meshes,
-    // animations,
+    animations,
     // cameras
   }
 }
@@ -82,5 +86,5 @@ export {
   loadGLTF,
   render,
   draw,
-  // animate
+  animate
 }
