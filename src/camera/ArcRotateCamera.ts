@@ -93,6 +93,7 @@ export default class ArcRotateCamera {
   }
 
   public getProjectionMatrix(aspect: number, near: number, far: number): Float32Array {
+    // return mat4.ortho(this._tempMat4, -aspect*3, aspect*3, -3, 3, near, far) 
     return mat4.perspective(
       this._tempMat4,
       glMatrix.toRadian(45),

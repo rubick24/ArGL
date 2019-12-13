@@ -15,6 +15,7 @@ gl.viewport(0, 0, canvas.width, canvas.height)
 gl.enable(gl.DEPTH_TEST)
 gl.enable(gl.CULL_FACE)
 
+// TODO: read camera setting in glTF
 const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 2, Math.PI / 2, 5)
 const di = new DesktopInput(canvas)
 

@@ -5,9 +5,6 @@ import ArcRotateCamera from '../camera/ArcRotateCamera'
 
 const firstModelMatrix = mat4.create() as Float32Array
 
-// TODO read camera setting in glTF
-// const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 2, Math.PI / 2, 5)
-
 export default (gl: WebGL2RenderingContext, scene: IScene, camera: ArcRotateCamera) => {
   if (!scene.nodes) {
     return
