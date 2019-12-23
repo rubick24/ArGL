@@ -74,6 +74,9 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
     scenes,
     meshes,
     animations,
+    draw: draw(gl),
+    render: render(gl, animations),
+    animate
     // cameras
   }
 }
@@ -82,9 +85,4 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
 // draw(gl, meshes[0], modelMatrix, viewMatrix, projectionMatrix, cameraPositon)
 // animate(animations[0], )
 
-export {
-  loadGLTF,
-  render,
-  draw,
-  animate
-}
+export default loadGLTF

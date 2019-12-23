@@ -34,6 +34,7 @@ export default (json: GlTF, meshes: IMesh[]) => {
       }
       return {
         name: node.name || '',
+        index: v,
         matrix,
         mesh: node.mesh !== undefined ? meshes[node.mesh] : undefined,
         children: node.children !== undefined ? getNodes(node.children) : undefined,

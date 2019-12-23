@@ -5,6 +5,8 @@ export interface IAccessor {
   itemSize: number
   count: number
   componentType: number
+  max: number[] | undefined
+  min: number[] | undefined
   bufferData: GLArrayType
 }
 
@@ -36,6 +38,7 @@ export interface IMesh {
 
 export interface INode {
   name: string
+  index: number
   matrix: Float32Array
   mesh?: IMesh
   children?: INode[]
@@ -46,6 +49,22 @@ export interface IScene {
   name: string
   nodes?: INode[]
 }
+
+export interface IAnimationCannel {
+  targetNodeIndex: number
+  path: string
+  startAt: number
+  endAt: number
+  data: Float32Array
+}
+export interface IAnimation {
+  name: string
+  frameRate: number
+  triggerStart: boolean
+  startAt: number
+  channels: IAnimationCannel[]
+}
+
 
 export const typeSize = {
   SCALAR: 1,

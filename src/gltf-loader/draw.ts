@@ -3,8 +3,7 @@ import { IMesh } from './interfaces'
 
 const temp = mat4.create()
 
-export default (
-  gl: WebGL2RenderingContext,
+export default (gl: WebGL2RenderingContext) => (
   mesh: IMesh,
   modelMatrix: Float32Array,
   viewMatrix: Float32Array,

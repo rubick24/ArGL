@@ -1,6 +1,6 @@
 import { GlTF } from '../types/glTF'
-
 import { IAccessor, IPrimitive, IMaterial, IMesh } from './interfaces'
+import getDefaultMaterial from './getDefaultMaterial'
 
 export default (
   gl: WebGL2RenderingContext,
@@ -28,10 +28,14 @@ export default (
       const accessor = accessors[primitive.indices]
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, accessor.bufferData, gl.STATIC_DRAW)
 
-      if (primitive.material === undefined) {
-        throw new Error('glTFLoader: no default material')
+      let material: IMaterial
+      if (primitive.material === undefined) {         
+        // throw new Error('glTFLoader: no default material')
+        material = getDefaultMaterial(gl)
+      } else {
+        material = materials[primitive.material]
       }
-      const material = materials[primitive.material]
+      
 
       // const attributes = Object.keys(primitive.attributes)
       const attributes = ['POSITION', 'NORMAL', 'TANGENT', 'TEXCOORD_0']

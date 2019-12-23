@@ -19,6 +19,8 @@ export default (json: GlTF, buffers: ArrayBuffer[]): IAccessor[] => {
       itemSize,
       count: accessor.count,
       componentType: accessor.componentType,
+      max: accessor.max,
+      min: accessor.min,
       bufferData: new arrayType(
         buffers[bufferIndex],
         byteOffset, // offset of byte
