@@ -37,7 +37,7 @@ const common = (inputAccessor: IAccessor, outputAccessor: IAccessor, currentTime
 
 export const getInterpolationVec3 = (
   inputAccessor: IAccessor,
-  outputAccessor: IAccessor, 
+  outputAccessor: IAccessor,
   interpolation: string | undefined,
   currentTime: number,
 ) => {
@@ -86,7 +86,7 @@ export const getInterpolationVec3 = (
 
 export const getInterpolationQuat = (
   inputAccessor: IAccessor,
-  outputAccessor: IAccessor, 
+  outputAccessor: IAccessor,
   interpolation: string | undefined,
   currentTime: number,
 ) => {
@@ -109,7 +109,7 @@ export const getInterpolationQuat = (
 
 export const getInterpolationFloat = (
   inputAccessor: IAccessor,
-  outputAccessor: IAccessor, 
+  outputAccessor: IAccessor,
   interpolation: string | undefined,
   currentTime: number,
 ) => {

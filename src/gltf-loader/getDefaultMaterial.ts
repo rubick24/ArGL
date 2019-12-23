@@ -36,7 +36,7 @@ export default (gl: WebGL2RenderingContext): IMaterial => {
       {
         name: 'u_BaseColorFactor',
         type: 'VEC4' as UniformType,
-        value: new Float32Array([0.5, 0.5, 0.5, 1.0])
+        value: new Float32Array([1., 1., 1., 1.])
       },
       {
         name: 'u_BaseColorSampler',

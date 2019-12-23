@@ -26,7 +26,7 @@ export default (json: GlTF, accessors: IAccessor[]) => {
         let data: Float32Array | null = null
         switch (c.target.path) {
           case 'scale':
-          case 'translation': 
+          case 'translation':
             data = new Float32Array(frameCount * 3)
             for (let i=0;i<frameCount;i+=1) {
               const v = getInterpolationVec3(inputAccessor, outputAccessor, sampler.interpolation, i / frameRate)
@@ -62,9 +62,9 @@ export default (json: GlTF, accessors: IAccessor[]) => {
             startAt: inputAccessor.min[0],
             endAt: inputAccessor.max[0],
             data
-          }) 
+          })
         }
-      }      
+      }
       return res
     }, [] as IAnimationCannel[])
     return {
@@ -75,7 +75,7 @@ export default (json: GlTF, accessors: IAccessor[]) => {
       channels
     }
   })
-  
+
 
   return animations
 }

@@ -29,13 +29,13 @@ export default (
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, accessor.bufferData, gl.STATIC_DRAW)
 
       let material: IMaterial
-      if (primitive.material === undefined) {         
+      if (primitive.material === undefined) {
         // throw new Error('glTFLoader: no default material')
         material = getDefaultMaterial(gl)
       } else {
         material = materials[primitive.material]
       }
-      
+
 
       // const attributes = Object.keys(primitive.attributes)
       const attributes = ['POSITION', 'NORMAL', 'TANGENT', 'TEXCOORD_0']
