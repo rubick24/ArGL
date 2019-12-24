@@ -70,6 +70,7 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
   const animations = getAnimations(json, accessors)
 
   return {
+    json,
     // scene,
     scenes,
     meshes,
