@@ -10,6 +10,7 @@ if (!gl) {
   throw new Error('webgl2 not available')
 }
 gl.viewport(0, 0, canvas.width, canvas.height)
+
 const shader = new Shader(gl, vsSource, fsSource)
 shader.use()
 const quad = [-1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0]
