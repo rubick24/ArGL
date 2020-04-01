@@ -1,6 +1,6 @@
-import { vec3, mat4, glMatrix } from 'gl-matrix'
+import { vec3, mat4 } from 'gl-matrix'
 import DesktopInput from '../input/DesktopInput'
-// import TouchInput from '../input/TouchInput'
+import TouchInput from '../input/TouchInput'
 
 const up = vec3.fromValues(0, 1, 0)
 
@@ -22,6 +22,7 @@ export default class ArcRotateCamera {
     public alpha: number,
     public beta: number,
     public radius: number,
+    public fovy = Math.PI/4,
     public allowUpsideDown = true
   ) {
     this.updateViewMatrix()
@@ -93,10 +94,10 @@ export default class ArcRotateCamera {
   }
 
   public getProjectionMatrix(aspect: number, near: number, far: number): Float32Array {
-    // return mat4.ortho(this._tempMat4, -aspect*3, aspect*3, -3, 3, near, far) 
+    // return mat4.ortho(this._tempMat4, -aspect*3, aspect*3, -3, 3, near, far)
     return mat4.perspective(
       this._tempMat4,
-      glMatrix.toRadian(45),
+      this.fovy,
       aspect,
       near,
       far
@@ -112,16 +113,27 @@ export default class ArcRotateCamera {
       this.alpha += radianX
       this.beta += radianY
     }
-    // process zoom here
-    // di.mouseInput.wheel
+    const deltaWheel = di.mouseInput.lastWheel - di.mouseInput.wheel
+    this.radius += deltaWheel / 1000
   }
 
-  // public processTouchInput(di: TouchInput) {
-  //   const radianX = (di.touchInput.pan.deltaX / di.el.clientWidth) * Math.PI * 2
-  //   const radianY =
-  //     -(di.touchInput.pan.deltaY / di.el.clientHeight) * Math.PI * 2
-  //   this.alpha += radianX
-  //   this.beta += radianY
-  //   // and here
-  // }
+  public processTouchInput(ti: TouchInput) {
+    const deltas = ti.touchList.map((touch, i) => {
+      const lastTouch = ti.lastTouchList.find(v => v.identifier === touch.identifier)
+      if (lastTouch) {
+        return {
+          deltaX: touch.screenX - lastTouch.screenX,
+          deltaY: touch.screenY - lastTouch.screenY
+        }
+      } else {
+        return { deltaX: 0, deltaY: 0}
+      }
+    })
+    if (deltas.length === 1) {
+      const radianX = (deltas[0].deltaX / ti.el.clientWidth) * Math.PI
+      const radianY = -(deltas[0].deltaY / ti.el.clientHeight) * Math.PI
+      this.alpha += radianX
+      this.beta += radianY
+    }
+  }
 }

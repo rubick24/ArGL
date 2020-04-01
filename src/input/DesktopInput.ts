@@ -13,9 +13,9 @@ export default class DesktopInput {
   public currentlyPressedKeys: Map<string, boolean>
   public mouseInput: IMouseInput
   private raf = 0
+  private t = performance.now()
 
   constructor(public el: HTMLElement, options?: { lockPointer?: boolean }) {
-    this.el = el
     if (options) {
       if (options.lockPointer !== undefined) {
         this.lockPointer = options.lockPointer
@@ -54,27 +54,31 @@ export default class DesktopInput {
       this.mouseInput.draging = false
     }
     const addInputListener = () => {
-      document.addEventListener('keydown', handleKeyDown)
-      document.addEventListener('keyup', handleKeyUp)
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mousedown', handleDragStart)
-      document.addEventListener('mouseup', handleDragEnd)
-      document.addEventListener('wheel', handleWheel)
+      el.addEventListener('keydown', handleKeyDown)
+      el.addEventListener('keyup', handleKeyUp)
+      el.addEventListener('mousemove', handleMouseMove)
+      el.addEventListener('mousedown', handleDragStart)
+      el.addEventListener('mouseup', handleDragEnd)
+      el.addEventListener('wheel', handleWheel)
       const af = () => {
-        this.mouseInput.lastX = this.mouseInput.x
-        this.mouseInput.lastY = this.mouseInput.y
-        this.mouseInput.lastWheel = this.mouseInput.wheel
+        const now = performance.now()
+        if (now - this.t > 100) {
+          this.t = now
+          this.mouseInput.lastX = this.mouseInput.x
+          this.mouseInput.lastY = this.mouseInput.y
+          this.mouseInput.lastWheel = this.mouseInput.wheel
+        }
         requestAnimationFrame(af)
       }
       this.raf = requestAnimationFrame(af)
     }
     const removeInputListener = () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.removeEventListener('keyup', handleKeyUp)
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mousedown', handleDragStart)
-      document.removeEventListener('mouseup', handleDragEnd)
-      document.removeEventListener('wheel', handleWheel)
+      el.removeEventListener('keydown', handleKeyDown)
+      el.removeEventListener('keyup', handleKeyUp)
+      el.removeEventListener('mousemove', handleMouseMove)
+      el.removeEventListener('mousedown', handleDragStart)
+      el.removeEventListener('mouseup', handleDragEnd)
+      el.removeEventListener('wheel', handleWheel)
       cancelAnimationFrame(this.raf)
     }
 
@@ -98,8 +102,7 @@ export default class DesktopInput {
       el.contentEditable = 'true'
       el.style.cursor = 'default'
       el.style.outline = 'none'
-      el.addEventListener('focus', addInputListener)
-      el.addEventListener('blur', removeInputListener)
+      addInputListener()
     }
   }
 }
