@@ -4,16 +4,16 @@
     "build": "webpack"
   },
   "devDependencies": {
-    "@types/webpack-env": "^1.14.1",
-    "clean-webpack-plugin": "^3.0.0",
-    "gl-matrix": "^3.1.0",
-    "html-webpack-plugin": "^3.2.0",
-    "raw-loader": "^3.1.0",
-    "ts-loader": "^6.2.0",
-    "typescript": "^3.6.4",
-    "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.9",
-    "webpack-dev-server": "^3.8.2"
+    "@types/webpack-env": "latest",
+    "clean-webpack-plugin": "latest",
+    "gl-matrix": "latest",
+    "html-webpack-plugin": "latest",
+    "raw-loader": "latest",
+    "ts-loader": "latest",
+    "typescript": "latest",
+    "webpack": "latest",
+    "webpack-cli": "latest",
+    "webpack-dev-server": "latest"
   },
   "dependencies": {}
 }
