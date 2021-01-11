@@ -7,10 +7,10 @@ const tempRes = vec3.create()
 const tempQuat = quat.create()
 
 const common = (inputAccessor: IAccessor, outputAccessor: IAccessor, currentTime: number) => {
-  const previousTime = [...inputAccessor.bufferData].reduce((p, c) =>
+  const previousTime = (inputAccessor.bufferData as Float32Array).reduce((p, c) =>
     c > p && c < currentTime ? c : p
   )
-  const nextTime = [...inputAccessor.bufferData].reduce((p, c) => {
+  const nextTime = (inputAccessor.bufferData as Float32Array).reduce((p, c) => {
     if (c > currentTime && p > currentTime) {
       return c < p ? c : p
     } else {
