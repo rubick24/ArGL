@@ -1,5 +1,5 @@
 import { GlTF } from '../types/glTF'
-import { IAccessor, typeSize, componentTypedArray } from './interfaces'
+import { GLType, IAccessor, typeSize, componentTypedArray } from './interfaces'
 
 export default (json: GlTF, buffers: ArrayBuffer[]): IAccessor[] => {
   if (!json.accessors || !json.bufferViews) {

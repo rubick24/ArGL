@@ -22,7 +22,7 @@ export default (gl: WebGL2RenderingContext, animations: IAnimation[]) => (
   })
 
   const projectionMatrix = camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.1, 1000)
-  const renderNode = (node: INode, modelMatrix: Float32Array) => {
+  const renderNode = (node: INode, modelMatrix: mat4) => {
     mat4.mul(node.tempMatrix, modelMatrix, node.matrix)
 
     animations.forEach(a => {
@@ -32,7 +32,7 @@ export default (gl: WebGL2RenderingContext, animations: IAnimation[]) => (
           if (acTiming < 0 || acTiming > c.endAt) {
             return
           }
-          const currentFrame =  Math.round(a.frameRate * acTiming)
+          const currentFrame = Math.round(a.frameRate * acTiming)
           if (c.targetNodeIndex === node.index) {
             if (c.path === 'scale') {
               const v = c.data.slice(currentFrame * 3, currentFrame * 3 + 3)

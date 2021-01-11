@@ -1,14 +1,14 @@
-import { mat4 } from 'gl-matrix'
+import { vec3, mat4 } from 'gl-matrix'
 import { IMesh } from './interfaces'
 
 const temp = mat4.create()
 
 export default (gl: WebGL2RenderingContext) => (
   mesh: IMesh,
-  modelMatrix: Float32Array,
-  viewMatrix: Float32Array,
-  projectionMatrix: Float32Array,
-  cameraPosition: Float32Array
+  modelMatrix: mat4,
+  viewMatrix: mat4,
+  projectionMatrix: mat4,
+  cameraPosition: vec3
 ) => {
   mat4.multiply(temp, viewMatrix, modelMatrix)
   const mvpMatrix = mat4.multiply(mat4.create(), projectionMatrix, temp)

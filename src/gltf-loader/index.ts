@@ -9,13 +9,6 @@ import getAnimations from './getAnimations'
 import draw from './draw'
 import render from './render'
 import animate from './animate'
-// interface IGlTFExpose {
-//   scene: object
-//   meshes: object[]
-//   animations?: object[]
-//   scenes?: object[]
-//   cameras?: object[]
-// }
 
 const relativeURL = (base: string, target: string) => {
   if (base.lastIndexOf('/') !== -1) {

@@ -1,4 +1,3 @@
-
 export default class TouchInput {
   public touchList: Touch[] = []
   public lastTouchList: Touch[] = []

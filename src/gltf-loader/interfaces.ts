@@ -1,4 +1,14 @@
+import { mat4 } from 'gl-matrix'
 import Shader from '../shader'
+
+export type GLType = 'SCALAR' | 'VEC2' | 'VEC3' | 'VEC4' | 'MAT2' | 'MAT3' | 'MAT4'
+export type GLArrayType =
+  | Int8Array
+  | Uint8Array
+  | Int16Array
+  | Uint16Array
+  | Uint32Array
+  | Float32Array
 
 export interface IAccessor {
   index: number
@@ -10,7 +20,16 @@ export interface IAccessor {
   bufferData: GLArrayType
 }
 
-export type UniformType = 'BOOLEAN' | 'INT' | 'FLOAT' | 'VEC2' | 'VEC3' | 'VEC4' | 'MAT2' | 'MAT3' | 'MAT4'
+export type UniformType =
+  | 'BOOLEAN'
+  | 'INT'
+  | 'FLOAT'
+  | 'VEC2'
+  | 'VEC3'
+  | 'VEC4'
+  | 'MAT2'
+  | 'MAT3'
+  | 'MAT4'
 
 export interface IMaterial {
   shader: Shader
@@ -39,10 +58,10 @@ export interface IMesh {
 export interface INode {
   name: string
   index: number
-  matrix: Float32Array
+  matrix: mat4
   mesh?: IMesh
   children?: INode[]
-  tempMatrix: Float32Array
+  tempMatrix: mat4
 }
 
 export interface IScene {
@@ -64,7 +83,6 @@ export interface IAnimation {
   startAt: number
   channels: IAnimationCannel[]
 }
-
 
 export const typeSize = {
   SCALAR: 1,

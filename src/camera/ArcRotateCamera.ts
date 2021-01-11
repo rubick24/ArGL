@@ -5,24 +5,24 @@ import TouchInput from '../input/TouchInput'
 const up = vec3.fromValues(0, 1, 0)
 
 export default class ArcRotateCamera {
-  public rotationMatrix: Float32Array = mat4.identity(mat4.create())
+  public rotationMatrix: mat4 = mat4.identity(mat4.create())
   public maxAlphaLimit = Math.PI * 2
   public minAlphaLimit = -Math.PI * 2
   public maxBetaLimit = Math.PI
   public minBetaLimit = 0
 
-  private _viewMaxtrix: Float32Array = mat4.create()
-  private _position: Float32Array = vec3.create()
-  private _tempMat4: Float32Array = mat4.create()
-  private _tempAxis: Float32Array = vec3.create()
-  private _tempUp: Float32Array = vec3.create()
+  private _viewMaxtrix: mat4 = mat4.create()
+  private _position: vec3 = vec3.create()
+  private _tempMat4: mat4 = mat4.create()
+  private _tempAxis: vec3 = vec3.create()
+  private _tempUp: vec3 = vec3.create()
 
   constructor(
-    public target: Float32Array,
+    public target: vec3,
     public alpha: number,
     public beta: number,
     public radius: number,
-    public fovy = Math.PI/4,
+    public fovy = Math.PI / 4,
     public allowUpsideDown = true
   ) {
     this.updateViewMatrix()
@@ -93,15 +93,9 @@ export default class ArcRotateCamera {
     mat4.lookAt(this._viewMaxtrix, this.position, this.target, this.up)
   }
 
-  public getProjectionMatrix(aspect: number, near: number, far: number): Float32Array {
+  public getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
     // return mat4.ortho(this._tempMat4, -aspect*3, aspect*3, -3, 3, near, far)
-    return mat4.perspective(
-      this._tempMat4,
-      this.fovy,
-      aspect,
-      near,
-      far
-    )
+    return mat4.perspective(this._tempMat4, this.fovy, aspect, near, far)
   }
 
   public processDesktopInput(di: DesktopInput) {
@@ -126,7 +120,7 @@ export default class ArcRotateCamera {
           deltaY: touch.screenY - lastTouch.screenY
         }
       } else {
-        return { deltaX: 0, deltaY: 0}
+        return { deltaX: 0, deltaY: 0 }
       }
     })
     if (deltas.length === 1) {

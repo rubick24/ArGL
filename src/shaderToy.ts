@@ -11,7 +11,9 @@ if (!gl) {
 }
 gl.viewport(0, 0, canvas.width, canvas.height)
 
-const shader = new Shader(gl, vsSource, fsSource)
+const shader = new Shader({
+  gl, vs: vsSource, fs: fsSource
+})
 shader.use()
 const quad = [-1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0]
 const quadVAO = gl.createVertexArray()

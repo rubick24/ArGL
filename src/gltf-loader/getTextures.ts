@@ -21,7 +21,12 @@ export default (
     wrapT: WebGL2RenderingContext.REPEAT
   }
   const sJSON = tJSON.sampler
-    ? Object.assign(defaultSampler, json.samplers && json.samplers.length > tJSON.sampler ? json.samplers[tJSON.sampler] : defaultSampler)
+    ? Object.assign(
+        defaultSampler,
+        json.samplers && json.samplers.length > tJSON.sampler
+          ? json.samplers[tJSON.sampler]
+          : defaultSampler
+      )
     : defaultSampler
   const texture = gl.createTexture()
   if (!texture) {

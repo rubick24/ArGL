@@ -1,5 +1,5 @@
 import { vec3, quat } from 'gl-matrix'
-import { IAccessor } from './interfaces'
+import { GLArrayType, IAccessor } from './interfaces'
 
 const tempM0 = vec3.create()
 const tempM1 = vec3.create()
@@ -39,7 +39,7 @@ export const getInterpolationVec3 = (
   inputAccessor: IAccessor,
   outputAccessor: IAccessor,
   interpolation: string | undefined,
-  currentTime: number,
+  currentTime: number
 ) => {
   const [previousTime, nextTime, prevIndex, nextIndex, t, d] = common(
     inputAccessor,
@@ -61,26 +61,26 @@ export const getInterpolationVec3 = (
     }
     const p0 = preVal.vk
     const p1 = nextVal.vk
-    const m0 = vec3.scale(tempM0, preVal.bk, nextTime - previousTime)
-    const m1 = vec3.scale(tempM1, nextVal.ak, nextTime - previousTime)
+    const m0 = vec3.scale(tempM0, preVal.bk as vec3, nextTime - previousTime)
+    const m1 = vec3.scale(tempM1, nextVal.ak as vec3, nextTime - previousTime)
     const res = tempRes
-    vec3.scaleAndAdd(res, res, p0, 2 * t ** 3 - 3 * t ** 2 + 1)
+    vec3.scaleAndAdd(res, res, p0 as vec3, 2 * t ** 3 - 3 * t ** 2 + 1)
     vec3.scaleAndAdd(res, res, m0, t ** 3 - 2 * t ** 2 + t)
-    vec3.scaleAndAdd(res, res, p1, -2 * t ** 3 + 3 * t ** 2)
+    vec3.scaleAndAdd(res, res, p1 as vec3, -2 * t ** 3 + 3 * t ** 2)
     vec3.scaleAndAdd(res, res, m1, t ** 3 - t ** 2)
     return res
   } else {
     // LINEAR
     const pi = prevIndex * 3
     const ni = nextIndex * 3
-    const preVal = [d[pi], d[pi + 1], d[pi + 2]]
-    const nextVal = [d[ni], d[ni + 1], d[ni + 2]]
+    const preVal = [d[pi], d[pi + 1], d[pi + 2]] as vec3
+    const nextVal = [d[ni], d[ni + 1], d[ni + 2]] as vec3
 
-    if (interpolation === 'LINEAR') {
-      return vec3.lerp(tempRes, preVal, nextVal, t)
-    } else if (interpolation === 'STEP') {
+    if (interpolation === 'STEP') {
       return preVal
     }
+    // default: interpolation === 'LINEAR'
+    return vec3.lerp(tempRes, preVal, nextVal, t)
   }
 }
 
@@ -88,7 +88,7 @@ export const getInterpolationQuat = (
   inputAccessor: IAccessor,
   outputAccessor: IAccessor,
   interpolation: string | undefined,
-  currentTime: number,
+  currentTime: number
 ) => {
   const [previousTime, nextTime, prevIndex, nextIndex, t, d] = common(
     inputAccessor,
@@ -97,21 +97,17 @@ export const getInterpolationQuat = (
   )
   const pi = prevIndex * 4
   const ni = nextIndex * 4
-  const preVal = outputAccessor.bufferData.slice(pi, pi + 4)
-  const nextVal = outputAccessor.bufferData.slice(ni, ni + 4)
-  return quat.slerp(
-    tempQuat,
-    quat.fromValues.apply(quat, preVal),
-    quat.fromValues.apply(quat, nextVal),
-    t
-  )
+  const preVal = outputAccessor.bufferData.slice(pi, pi + 4) as quat
+  const nextVal = outputAccessor.bufferData.slice(ni, ni + 4) as quat
+
+  return quat.slerp(tempQuat, preVal, nextVal, t)
 }
 
 export const getInterpolationFloat = (
   inputAccessor: IAccessor,
   outputAccessor: IAccessor,
   interpolation: string | undefined,
-  currentTime: number,
+  currentTime: number
 ) => {
   const [previousTime, nextTime, prevIndex, nextIndex, t, d] = common(
     inputAccessor,
@@ -151,4 +147,3 @@ export const getInterpolationFloat = (
     return preVal + t * (nextVal - preVal)
   }
 }
-

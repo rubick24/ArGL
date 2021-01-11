@@ -1,19 +1,18 @@
 {
   "scripts": {
-    "start": "webpack-dev-server",
+    "dev": "webpack serve",
     "build": "webpack"
   },
   "devDependencies": {
-    "@types/webpack-env": "latest",
-    "clean-webpack-plugin": "latest",
-    "gl-matrix": "latest",
-    "html-webpack-plugin": "latest",
-    "raw-loader": "latest",
-    "ts-loader": "latest",
-    "typescript": "latest",
-    "webpack": "latest",
-    "webpack-cli": "latest",
-    "webpack-dev-server": "latest"
+    "clean-webpack-plugin": "^3.0.0",
+    "gl-matrix": "^3.3.0",
+    "html-webpack-plugin": "^4.5.1",
+    "raw-loader": "^4.0.2",
+    "ts-loader": "^8.0.14",
+    "typescript": "^4.1.3",
+    "webpack": "^5.12.3",
+    "webpack-cli": "^4.3.1",
+    "webpack-dev-server": "^3.11.1"
   },
   "dependencies": {}
 }

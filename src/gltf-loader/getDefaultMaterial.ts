@@ -3,10 +3,10 @@ import Shader from '../shader'
 import vsSource from './shader/m.vert'
 import fsSource from './shader/m.frag'
 
-
 const i = new Image()
 // i.addEventListener('load', () => {})
-i.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQYV2PYtGnTfwAHRgMW7aoU3gAAAABJRU5ErkJggg=='
+i.src =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQYV2PYtGnTfwAHRgMW7aoU3gAAAABJRU5ErkJggg=='
 
 export default (gl: WebGL2RenderingContext): IMaterial => {
   const dt = () => {
@@ -31,12 +31,12 @@ export default (gl: WebGL2RenderingContext): IMaterial => {
     return texture
   }
   return {
-    shader: new Shader(gl, vsSource, fsSource),
+    shader: new Shader({ gl, vs: vsSource, fs: fsSource }),
     uniforms: [
       {
         name: 'u_BaseColorFactor',
         type: 'VEC4' as UniformType,
-        value: new Float32Array([1., 1., 1., 1.])
+        value: new Float32Array([1, 1, 1, 1])
       },
       {
         name: 'u_BaseColorSampler',
