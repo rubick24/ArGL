@@ -2,7 +2,7 @@ import { vec3, mat4 } from 'gl-matrix'
 import DesktopInput from '../input/DesktopInput'
 // import TouchInput from '../input/TouchInput'
 
-export default class ArcRotateCamera {
+export default class UniversalCamera {
   public rotationMatrix: mat4 = mat4.identity(mat4.create())
 
   private _viewMaxtrix: mat4 = mat4.create()

@@ -7,22 +7,21 @@ const tempRes = vec3.create()
 const tempQuat = quat.create()
 
 const common = (inputAccessor: IAccessor, outputAccessor: IAccessor, currentTime: number) => {
-  const previousTime = (inputAccessor.bufferData as Float32Array).reduce((p, c) =>
-    c > p && c < currentTime ? c : p
-  )
-  const nextTime = (inputAccessor.bufferData as Float32Array).reduce((p, c) => {
-    if (c > currentTime && p > currentTime) {
-      return c < p ? c : p
-    } else {
-      return c > currentTime ? c : p
+  // maybe replace this by interval?
+  let previousTime = 0
+  let nextTime = 0
+  for (let i = 0; i < inputAccessor.bufferData.length; i++) {
+    if (inputAccessor.bufferData[i] > currentTime) {
+      previousTime = inputAccessor.bufferData[i - 1]
+      nextTime = inputAccessor.bufferData[i]
+      break
     }
-  })
+  }
 
   const prevIndex = inputAccessor.bufferData.indexOf(previousTime)
   const nextIndex = inputAccessor.bufferData.indexOf(nextTime)
 
   const t = (currentTime - previousTime) / (nextTime - previousTime)
-  // const path = channel.target.path
   const d = outputAccessor.bufferData
 
   return [previousTime, nextTime, prevIndex, nextIndex, t, d] as [
@@ -46,6 +45,10 @@ export const getInterpolationVec3 = (
     outputAccessor,
     currentTime
   )
+  if (prevIndex === -1) {
+    return [0, 0, 0] as vec3
+  }
+
   if (interpolation === 'CUBICSPLINE') {
     const pi = prevIndex * 9
     const ni = nextIndex * 9
@@ -70,16 +73,15 @@ export const getInterpolationVec3 = (
     vec3.scaleAndAdd(res, res, m1, t ** 3 - t ** 2)
     return res
   } else {
-    // LINEAR
     const pi = prevIndex * 3
     const ni = nextIndex * 3
     const preVal = [d[pi], d[pi + 1], d[pi + 2]] as vec3
-    const nextVal = [d[ni], d[ni + 1], d[ni + 2]] as vec3
-
     if (interpolation === 'STEP') {
       return preVal
     }
+
     // default: interpolation === 'LINEAR'
+    const nextVal = [d[ni], d[ni + 1], d[ni + 2]] as vec3
     return vec3.lerp(tempRes, preVal, nextVal, t)
   }
 }
@@ -95,6 +97,9 @@ export const getInterpolationQuat = (
     outputAccessor,
     currentTime
   )
+  if (prevIndex === -1) {
+    return [0, 0, 0, 1] as quat
+  }
   const pi = prevIndex * 4
   const ni = nextIndex * 4
   const preVal = outputAccessor.bufferData.slice(pi, pi + 4) as quat
@@ -114,6 +119,9 @@ export const getInterpolationFloat = (
     outputAccessor,
     currentTime
   )
+  if (prevIndex === -1) {
+    return 0
+  }
   if (interpolation === 'STEP') {
     const preVal = d[prevIndex]
     return preVal

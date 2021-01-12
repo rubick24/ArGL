@@ -23,9 +23,9 @@ const start = async () => {
   const { json, scenes, render, animations, animate } = await loadGLTF('/suzanne.gltf', gl)
   console.log(json)
 
-  // setInterval(() => {
-  //   animate(animations[0])
-  // }, 3000)
+  setInterval(() => {
+    animate(animations[0])
+  }, 3000)
 
   gl.clearColor(0, 0, 0, 0)
   const renderLoop = (time: number) => {

@@ -4,8 +4,10 @@ import getAccessor from './getAccessor'
 import getImages from './getImages'
 import getMeshes from './getMeshes'
 import getMaterials from './getMaterials'
+import getNodes from './getNodes'
 import getScenes from './getScenes'
 import getAnimations from './getAnimations'
+
 import draw from './draw'
 import render from './render'
 import animate from './animate'
@@ -58,9 +60,11 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
 
   const meshes = getMeshes(gl, json, accessors, materials)
 
-  const scenes = getScenes(json, meshes)
+  const nodes = getNodes(json, meshes)
 
-  const animations = getAnimations(json, accessors)
+  const scenes = getScenes(json, nodes)
+
+  const animations = getAnimations(json, accessors, nodes)
 
   return {
     json,
@@ -69,7 +73,7 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
     meshes,
     animations,
     draw: draw(gl),
-    render: render(gl, animations),
+    render: render(gl),
     animate
     // cameras
   }

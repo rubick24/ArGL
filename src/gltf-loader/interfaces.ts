@@ -59,6 +59,7 @@ export interface INode {
   name: string
   index: number
   matrix: mat4
+  animationMatrix?: mat4
   mesh?: IMesh
   children?: INode[]
   tempMatrix: mat4
@@ -70,18 +71,18 @@ export interface IScene {
 }
 
 export interface IAnimationCannel {
-  targetNodeIndex: number
+  targetNode: INode
   path: string
-  startAt: number
-  endAt: number
-  data: Float32Array
+  duration: number
+  interval: number
+  inputAccessor: IAccessor
+  outputAccessor: IAccessor
+  interpolation?: string
 }
 export interface IAnimation {
   name: string
-  frameRate: number
-  triggerStart: boolean
-  startAt: number
   channels: IAnimationCannel[]
+  duration: number
 }
 
 export const typeSize = {

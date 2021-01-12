@@ -12,7 +12,7 @@ export default (json: GlTF, buffers: ArrayBuffer[]): IAccessor[] => {
     const itemSize = typeSize[accessor.type as GLType]
     const bufferView = bufferViewsTemp[accessor.bufferView as number]
     const bufferIndex = bufferView.buffer
-    const arrayType = componentTypedArray[accessor.componentType]
+    const ArrayType = componentTypedArray[accessor.componentType]
     const byteOffset = (bufferView.byteOffset || 0) + (accessor.byteOffset || 0)
     return {
       index: i,
@@ -21,7 +21,7 @@ export default (json: GlTF, buffers: ArrayBuffer[]): IAccessor[] => {
       componentType: accessor.componentType,
       max: accessor.max,
       min: accessor.min,
-      bufferData: new arrayType(
+      bufferData: new ArrayType(
         buffers[bufferIndex],
         byteOffset, // offset of byte
         itemSize * accessor.count // length of element
