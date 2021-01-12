@@ -20,8 +20,7 @@ const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 4, Math.P
 const di = new DesktopInput(canvas)
 
 const start = async () => {
-  const { json, scenes, render, animations, animate } = await loadGLTF('/suzanne.gltf', gl)
-  console.log(json)
+  const { json, scenes, render, animations, animate } = await loadGLTF('/untitled.gltf', gl)
 
   setInterval(() => {
     animate(animations[0])

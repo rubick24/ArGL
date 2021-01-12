@@ -1,10 +1,10 @@
 import { IAnimation } from './interfaces'
 import { mat4 } from 'gl-matrix'
 import {
-  getInterpolationVec3,
-  getInterpolationQuat
-  // getInterpolationFloat
-} from './getInterpolation'
+  getLerpVec3,
+  getLerpQuat
+  // getLerpFloat
+} from './getLerp'
 import frameHooks from './frameHooks'
 
 export default (animation: IAnimation) => {
@@ -19,6 +19,7 @@ export default (animation: IAnimation) => {
         frameHooks.beforeDraw.findIndex(v => v === af),
         1
       )
+      return
     }
     animation.channels.forEach(c => {
       if (at > c.duration) {
@@ -26,14 +27,14 @@ export default (animation: IAnimation) => {
       }
       const node = c.targetNode
       if (c.path === 'scale') {
-        const v = getInterpolationVec3(c.inputAccessor, c.outputAccessor, c.interpolation, at)
+        const v = getLerpVec3(c.inputAccessor, c.outputAccessor, c.interpolation, at)
         mat4.scale(node.animationMatrix as mat4, node.animationMatrix as mat4, v)
       } else if (c.path === 'translation') {
-        const v = getInterpolationVec3(c.inputAccessor, c.outputAccessor, c.interpolation, at)
+        const v = getLerpVec3(c.inputAccessor, c.outputAccessor, c.interpolation, at)
         mat4.translate(node.animationMatrix as mat4, node.animationMatrix as mat4, v)
       } else if (c.path === 'rotation') {
         const rotateAni = mat4.create()
-        const v = getInterpolationQuat(c.inputAccessor, c.outputAccessor, c.interpolation, at)
+        const v = getLerpQuat(c.inputAccessor, c.outputAccessor, c.interpolation, at)
         mat4.fromQuat(rotateAni, v)
         mat4.mul(node.animationMatrix as mat4, node.animationMatrix as mat4, rotateAni)
       }

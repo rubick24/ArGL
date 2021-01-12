@@ -34,7 +34,7 @@ const common = (inputAccessor: IAccessor, outputAccessor: IAccessor, currentTime
   ]
 }
 
-export const getInterpolationVec3 = (
+export const getLerpVec3 = (
   inputAccessor: IAccessor,
   outputAccessor: IAccessor,
   interpolation: string | undefined,
@@ -86,7 +86,7 @@ export const getInterpolationVec3 = (
   }
 }
 
-export const getInterpolationQuat = (
+export const getLerpQuat = (
   inputAccessor: IAccessor,
   outputAccessor: IAccessor,
   interpolation: string | undefined,
@@ -108,7 +108,7 @@ export const getInterpolationQuat = (
   return quat.slerp(tempQuat, preVal, nextVal, t)
 }
 
-export const getInterpolationFloat = (
+export const getLerpFloat = (
   inputAccessor: IAccessor,
   outputAccessor: IAccessor,
   interpolation: string | undefined,

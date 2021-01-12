@@ -48,6 +48,7 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
     throw new Error('glTFLoader: file suffix not support')
   }
 
+  console.log('glTFLoader: json', json)
   // get accessors
   const accessors = getAccessor(json, buffers)
 
