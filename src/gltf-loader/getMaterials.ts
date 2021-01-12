@@ -32,7 +32,7 @@ export default (gl: WebGL2RenderingContext, json: GlTF, images: HTMLImageElement
       uniforms.push({
         name: 'u_BaseColorFactor',
         type: 'VEC4' as UniformType,
-        value: new Float32Array(mr.baseColorFactor || [0.5, 0.5, 0.5])
+        value: new Float32Array(mr.baseColorFactor || [1, 1, 1, 1])
       })
 
       if (mr.baseColorTexture) {

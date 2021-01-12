@@ -18,6 +18,6 @@ void main()
 
   vec4 baseColor = texture(u_BaseColorSampler, v_TEXCOORD_0) * u_BaseColorFactor;
   vec3 diffuse = max(dot(v_TBN[2], ld), 0.0) * lc;
-  FragColor = vec4(baseColor.rgb * (0.3 + diffuse), 1.);
-  // FragColor = v_COLOR;
+  // FragColor = vec4(baseColor.rgb * (0.3 + diffuse), 1.);
+  FragColor = baseColor;
 }
