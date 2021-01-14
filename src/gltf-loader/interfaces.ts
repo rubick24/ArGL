@@ -13,6 +13,7 @@ export type GLArrayType =
 export interface IAccessor {
   index: number
   itemSize: number
+  type: string
   count: number
   componentType: number
   max: number[] | undefined
@@ -32,7 +33,6 @@ export type UniformType =
   | 'MAT4'
 
 export interface IMaterial {
-  shader: Shader
   uniforms: {
     name: string
     type: UniformType
@@ -48,6 +48,7 @@ export interface IPrimitive {
   }
   vao: WebGLVertexArrayObject
   material: IMaterial
+  shader: Shader
   mode: number
 }
 
@@ -55,13 +56,26 @@ export interface IMesh {
   primitives: IPrimitive[]
 }
 
+export interface ISkin {
+  joints: number[]
+  inverseBindMatricesAccessor: IAccessor | null
+  jointMatrices: mat4[]
+  jointNormalMatrices: mat4[]
+}
+export type ComputeJoints = (skin: ISkin, node: INode) => void
+
 export interface INode {
   name: string
   index: number
   matrix: mat4
-  animationMatrix?: mat4
+  // animationMatrix?: mat4
+  localTransform: mat4
+  worldTransform: mat4
+  inverseWorldTransform: mat4
+
   mesh?: IMesh
   children?: INode[]
+  skin?: ISkin
   tempMatrix: mat4
 }
 
@@ -81,7 +95,11 @@ export interface IAnimationCannel {
 }
 export interface IAnimation {
   name: string
-  channels: IAnimationCannel[]
+  targetNodes: {
+    node: INode
+    channels: IAnimationCannel[]
+  }[]
+  // channels: IAnimationCannel[]
   duration: number
 }
 

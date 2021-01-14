@@ -17,6 +17,7 @@ export default (json: GlTF, buffers: ArrayBuffer[]): IAccessor[] => {
     return {
       index: i,
       itemSize,
+      type: accessor.type,
       count: accessor.count,
       componentType: accessor.componentType,
       max: accessor.max,

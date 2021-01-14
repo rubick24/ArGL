@@ -1,7 +1,7 @@
 import { IMaterial, UniformType } from './interfaces'
-import Shader from '../shader'
-import vsSource from './shader/m.vert'
-import fsSource from './shader/m.frag'
+// import Shader from '../shader'
+// import vsSource from './shader/m.vert'
+// import fsSource from './shader/m.frag'
 
 const i = new Image()
 // i.addEventListener('load', () => {})
@@ -31,7 +31,6 @@ export default (gl: WebGL2RenderingContext): IMaterial => {
     return texture
   }
   return {
-    shader: new Shader({ gl, vs: vsSource, fs: fsSource }),
     uniforms: [
       {
         name: 'u_BaseColorFactor',

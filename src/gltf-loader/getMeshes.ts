@@ -1,6 +1,9 @@
 import { GlTF } from '../types/glTF'
 import { IAccessor, IPrimitive, IMaterial, IMesh } from './interfaces'
 import getDefaultMaterial from './getDefaultMaterial'
+import Shader from '../shader'
+import vsSource from './shader/vert'
+import fsSource from './shader/frag'
 
 export default (
   gl: WebGL2RenderingContext,
@@ -38,26 +41,50 @@ export default (
             material = materials[primitive.material]
           }
 
-          // const attributes = Object.keys(primitive.attributes)
-          const attributes = ['POSITION', 'NORMAL', 'TANGENT', 'TEXCOORD_0']
+          const attributeKeys = Object.keys(primitive.attributes)
+          // const attributes = ['POSITION', 'NORMAL', 'TANGENT', 'TEXCOORD_0']
 
-          attributes.forEach(k => {
+          const attrs: { attrType: string, name: string }[] = []
+
+          attributeKeys.forEach((k, i) => {
             const buffer = gl.createBuffer()
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
             const accessor = accessors[primitive.attributes[k]]
             gl.bufferData(gl.ARRAY_BUFFER, accessor.bufferData, gl.STATIC_DRAW)
-            const attrLocation = gl.getAttribLocation(material.shader.program, 'a_' + k)
+            // const attrLocation = gl.getAttribLocation(shader.program, 'a_' + k)
+            gl.enableVertexAttribArray(i)
             gl.vertexAttribPointer(
-              attrLocation,
+              i, // attrLocation
               accessor.itemSize,
               accessor.componentType,
               false,
               0,
               0
             )
-            gl.enableVertexAttribArray(attrLocation)
+            const glslType = accessor.type === 'SCALAR' ? 'float' : accessor.type.toLocaleLowerCase()
+
+            attrs.push({
+              attrType: glslType,
+              name: k
+            })
           })
           gl.bindVertexArray(null)
+
+
+          // const vertUniforms: string[] = []
+          // if (attributeKeys.some(v => v === 'JOINTS_0')) {
+          //   vertUniforms.push(`uniform mat4 u_jointMat[${1}]`)
+          // }
+
+          const shader = new Shader({
+            gl,
+            vs: vsSource({
+              attrs: attrs.map((v, i) => `layout (location = ${i}) in ${v.attrType} a_${v.name};`).join('\n')
+            }),
+            fs: fsSource(),
+
+          })
+
           return {
             indices: {
               accessor,
@@ -65,6 +92,7 @@ export default (
             },
             vao,
             material,
+            shader,
             mode: primitive.mode === undefined ? 4 : primitive.mode
           }
         }

@@ -32,6 +32,9 @@ const getNodes = (json: GlTF, meshes: IMesh[]) => {
         matrix,
         mesh: node.mesh !== undefined ? meshes[node.mesh] : undefined,
         children: undefined,
+        localTransform: mat4.create(),
+        worldTransform: mat4.create(),
+        inverseWorldTransform: mat4.create(),
         tempMatrix: mat4.create()
       }
     }

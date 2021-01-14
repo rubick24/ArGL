@@ -1,21 +1,20 @@
 import { vec3, mat4 } from 'gl-matrix'
-import { IMesh } from './interfaces'
+import { IMesh, INode } from './interfaces'
 
 const temp = mat4.create()
+const normalMatrix = mat4.create()
 
 export default (gl: WebGL2RenderingContext) => (
-  mesh: IMesh,
-  modelMatrix: mat4,
+  node: INode,
   viewMatrix: mat4,
-  projectionMatrix: mat4,
-  cameraPosition: vec3
+  projectionMatrix: mat4
 ) => {
-  mat4.multiply(temp, viewMatrix, modelMatrix)
-  const mvpMatrix = mat4.multiply(mat4.create(), projectionMatrix, temp)
+  const mesh = node.mesh as IMesh
+  const modelMatrix = node.tempMatrix
   mat4.invert(temp, modelMatrix)
-  const normalMatrix = mat4.transpose(mat4.create(), temp)
+  mat4.transpose(normalMatrix, temp)
   mesh.primitives.forEach((primitive, i) => {
-    const shader = primitive.material.shader
+    const shader = primitive.shader
     shader.use()
     primitive.material.textures.forEach((texture, i) => {
       gl.activeTexture(gl.TEXTURE0 + i)
@@ -26,9 +25,17 @@ export default (gl: WebGL2RenderingContext) => (
       shader.setUniform(u.name, u.type, u.value)
     })
 
-    shader.setUniform('u_Camera', 'VEC3', cameraPosition)
-    shader.setUniform('u_MVPMatrix', 'MAT4', mvpMatrix)
+    if (node.skin !== undefined /* && primitive.hasWeights && primitive.hasJoints */) {
+      const skin = node.skin
+      skin.jointMatrices.map((v, i) => {
+        shader.setUniform(`u_jointMatrix`, 'MAT4', v)
+        // shader.setUniform('u_jointNormalMatrix', 'MAT4', skin.jointNormalMatrices[i])
+      })
+    }
+
     shader.setUniform('u_ModelMatrix', 'MAT4', modelMatrix)
+    shader.setUniform('u_ViewMatrix', 'MAT4', viewMatrix)
+    shader.setUniform('u_ProjectionMatrix', 'MAT4', projectionMatrix)
     shader.setUniform('u_NormalMatrix', 'MAT4', normalMatrix)
 
     gl.bindVertexArray(primitive.vao)
