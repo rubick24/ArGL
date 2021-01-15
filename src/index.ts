@@ -14,21 +14,21 @@ if (!gl) {
 gl.viewport(0, 0, canvas.width, canvas.height)
 
 gl.enable(gl.DEPTH_TEST)
-gl.enable(gl.CULL_FACE)
+// gl.enable(gl.CULL_FACE)
 gl.enable(gl.BLEND)
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
 
 // TODO: read camera setting in glTF
-const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 4, Math.PI / 4, 10)
+const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 2, Math.PI / 2, 10)
 const di = new DesktopInput(canvas)
 
 const start = async () => {
   const { json, scenes, render, animations, animate } = await loadGLTF('/t.glb', gl)
   console.log(animations)
-  setInterval(() => {
+  setTimeout(() => {
     animate(animations[0])
-  }, 6000)
+  }, 3000)
 
   // const snow = await createParticles(gl, {
   //   texture: './particle.png',

@@ -1,36 +1,31 @@
 import { GlTF } from '../types/glTF'
-import { INode, IMesh } from './interfaces'
+import { INode } from './interfaces'
 import { vec3, mat4, quat } from 'gl-matrix'
 
-const tmp = mat4.create()
+const defaultTranslation = vec3.create()
+const defaultRotation = quat.create()
+const defaultScale = vec3.fromValues(1, 1, 1)
 
-const getNodes = (json: GlTF, meshes: IMesh[]) => {
+const getNodes = (json: GlTF) => {
   if (!json.nodes) {
     return []
   }
   const inodes = json.nodes.map(
     (node, i): INode => {
-      let matrix
+      let matrix = mat4.create()
       if (node.matrix) {
-        matrix = new Float32Array(node.matrix) // TODO: to row major order?
+        matrix = new Float32Array(node.matrix)
       } else {
-        matrix = mat4.create()
-        if (node.translation) {
-          mat4.translate(matrix, matrix, node.translation as vec3)
-        }
-        if (node.rotation) {
-          mat4.fromQuat(tmp, node.rotation as quat)
-          mat4.mul(matrix, matrix, tmp)
-        }
-        if (node.scale) {
-          mat4.scale(matrix, matrix, node.scale as vec3)
-        }
+        const translation = node.translation as vec3 || defaultTranslation
+        const rotation = node.rotation as quat || defaultRotation
+        const scale = node.scale as vec3 || defaultScale
+        mat4.fromRotationTranslationScale(matrix, rotation, translation, scale)
       }
       return {
         name: node.name || '',
         index: i,
         matrix,
-        mesh: node.mesh !== undefined ? meshes[node.mesh] : undefined,
+        mesh: undefined,
         children: undefined,
         localTransform: mat4.create(),
         worldTransform: mat4.create(),

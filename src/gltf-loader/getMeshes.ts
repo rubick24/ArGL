@@ -1,5 +1,5 @@
 import { GlTF } from '../types/glTF'
-import { IAccessor, IPrimitive, IMaterial, IMesh } from './interfaces'
+import { IAccessor, IPrimitive, IMaterial, IMesh, ISkin } from './interfaces'
 import getDefaultMaterial from './getDefaultMaterial'
 import Shader from '../shader'
 import vsSource from './shader/vert'
@@ -9,7 +9,7 @@ export default (
   gl: WebGL2RenderingContext,
   json: GlTF,
   accessors: IAccessor[],
-  materials: IMaterial[]
+  materials: IMaterial[],
 ) => {
   if (!json.meshes) {
     throw new Error('glTFLoader: no meshes found')
@@ -70,15 +70,19 @@ export default (
           })
           gl.bindVertexArray(null)
 
-
-          // const vertUniforms: string[] = []
-          // if (attributeKeys.some(v => v === 'JOINTS_0')) {
-          //   vertUniforms.push(`uniform mat4 u_jointMat[${1}]`)
-          // }
+          const vertDefines: string[] = []
+          if (attributeKeys.includes('JOINTS_0')) {
+            const jointCount = json.skins?.reduce((p, c) => Math.max(p, c.joints.length), 0) || 0
+            if (jointCount) {
+              vertDefines.push(`#define USE_SKINNING 1`)
+              vertDefines.push(`#define JOINT_COUNT ${jointCount}`)
+            }
+          }
 
           const shader = new Shader({
             gl,
             vs: vsSource({
+              defines: vertDefines.join('\n'),
               attrs: attrs.map((v, i) => `layout (location = ${i}) in ${v.attrType} a_${v.name};`).join('\n')
             }),
             fs: fsSource(),

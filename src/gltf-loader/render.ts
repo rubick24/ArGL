@@ -1,26 +1,33 @@
 import { IScene, INode, ComputeJoints } from './interfaces'
-import draw from './draw'
+import createDraw from './draw'
 import { mat4 } from 'gl-matrix'
 import ArcRotateCamera from '../camera/ArcRotateCamera'
 
 import frameHooks from './frameHooks'
 
-const firstModelMatrix = mat4.create() as Float32Array
+const rootTransform = mat4.create() as Float32Array
 let projectionMatrix: mat4 | null = null
 
 export default (gl: WebGL2RenderingContext, nodes: INode[], computeJoints: ComputeJoints) => {
-  const renderNode = (camera: ArcRotateCamera, node: INode, modelMatrix: mat4) => {
-    mat4.copy(node.worldTransform, modelMatrix)
+  const applyTransform = (node: INode, parentTransform: mat4) => {
+    mat4.mul(node.worldTransform, parentTransform, node.matrix)
+    mat4.mul(node.worldTransform, node.worldTransform, node.localTransform)
     mat4.invert(node.inverseWorldTransform, node.worldTransform)
-    mat4.mul(node.tempMatrix, node.worldTransform, node.matrix)
-    mat4.mul(node.tempMatrix, node.tempMatrix, node.localTransform)
+    if (node.children) {
+      node.children.forEach(child => {
+        applyTransform(child, node.worldTransform)
+      })
+    }
+  }
 
+  const draw = createDraw(gl)
+  const renderNode = (camera: ArcRotateCamera, node: INode) => {
     if (node.mesh) {
-      draw(gl)(node, camera.viewMatrix, projectionMatrix as mat4)
+      draw(node, camera.viewMatrix, projectionMatrix as mat4)
     }
     if (node.children) {
       node.children.forEach(child => {
-        renderNode(camera, child, node.tempMatrix)
+        renderNode(camera, child)
       })
     }
   }
@@ -35,19 +42,22 @@ export default (gl: WebGL2RenderingContext, nodes: INode[], computeJoints: Compu
     }
 
     nodes.forEach(node => {
-      // 计算蒙皮
-      if(node.mesh !== undefined && node.skin !== undefined) {
-        computeJoints(node.skin, node)
-      }
       // 重置动画矩阵？
       mat4.identity(node.localTransform)
     })
 
     frameHooks.beforeDraw.map(v => v(time))
 
-    scene.nodes.forEach(node => {
-      renderNode(camera, node, firstModelMatrix)
+    scene.nodes.forEach(node => applyTransform(node, rootTransform))
+
+    nodes.forEach(node => {
+      // 计算蒙皮
+      if (node.mesh !== undefined && node.skin !== undefined) {
+        computeJoints(node.skin, node)
+      }
     })
+
+    scene.nodes.forEach(node => renderNode(camera, node))
 
     frameHooks.afterDraw.map(v => v(time))
   }

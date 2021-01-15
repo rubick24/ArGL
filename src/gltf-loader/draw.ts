@@ -1,4 +1,4 @@
-import { vec3, mat4 } from 'gl-matrix'
+import { mat4 } from 'gl-matrix'
 import { IMesh, INode } from './interfaces'
 
 const temp = mat4.create()
@@ -10,7 +10,7 @@ export default (gl: WebGL2RenderingContext) => (
   projectionMatrix: mat4
 ) => {
   const mesh = node.mesh as IMesh
-  const modelMatrix = node.tempMatrix
+  const modelMatrix = node.worldTransform
   mat4.invert(temp, modelMatrix)
   mat4.transpose(normalMatrix, temp)
   mesh.primitives.forEach((primitive, i) => {
@@ -27,9 +27,9 @@ export default (gl: WebGL2RenderingContext) => (
 
     if (node.skin !== undefined /* && primitive.hasWeights && primitive.hasJoints */) {
       const skin = node.skin
-      skin.jointMatrices.map((v, i) => {
-        shader.setUniform(`u_jointMatrix`, 'MAT4', v)
-        // shader.setUniform('u_jointNormalMatrix', 'MAT4', skin.jointNormalMatrices[i])
+      skin.jointMatrices.forEach((v, i) => {
+        shader.setUniform(`u_jointMatrices[${i}]`, 'MAT4', v)
+        // shader.setUniform(`u_jointNormalMatrix[${i}]`, 'MAT4', skin.jointNormalMatrices[i])
       })
     }
 

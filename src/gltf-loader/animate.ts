@@ -11,11 +11,6 @@ export default (animation: IAnimation) => {
   const startAt = performance.now()
 
   const transform = mat4.create()
-  const trans = {
-    scale: vec3.fromValues(1, 1, 1),
-    translation: vec3.create(),
-    rotation: quat.create()
-  }
 
   const af = (t: number) => {
     const at = (t - startAt) / 1000
@@ -27,6 +22,11 @@ export default (animation: IAnimation) => {
       return
     }
     animation.targetNodes.forEach(tn => {
+      const trans = {
+        scale: vec3.fromValues(1, 1, 1),
+        translation: vec3.create(),
+        rotation: quat.create()
+      }
       tn.channels.forEach(c => {
         if (at > c.duration) {
           return
@@ -38,7 +38,7 @@ export default (animation: IAnimation) => {
         } else if (c.path === 'rotation') {
           trans.rotation = getLerpQuat(c.inputAccessor, c.outputAccessor, c.interpolation, at)
         } else if (c.path === 'weights') {
-          console.log(1)
+          //
         }
       })
       mat4.fromRotationTranslationScale(

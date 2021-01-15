@@ -3,35 +3,38 @@ precision mediump float;
 ${ props?.defines || ''}
 ${ props?.attrs || ''}
 
-
 uniform mat4 u_ModelMatrix;
 uniform mat4 u_ViewMatrix;
 uniform mat4 u_ProjectionMatrix;
 uniform mat4 u_NormalMatrix;
 
-uniform mat4 u_jointMatrix[67];
+#ifdef USE_SKINNING
+uniform mat4 u_jointMatrices[JOINT_COUNT];
+// uniform mat4 u_jointNormalMatrix[JOINT_COUNT];
+#endif
 
-
-out vec3 v_POSITION;
 out vec2 v_TEXCOORD_0;
 out vec3 v_NORMAL;
+// out vec3 v_POSITION;
 // out mat3 v_TBN;
-
 
 uniform sampler2D u_BaseColorSampler;
 uniform vec4 u_BaseColorFactor;
 
 void main()
 {
+  #ifdef USE_SKINNING
   mat4 skinMat =
-    a_WEIGHTS_0.x * u_jointMatrix[int(a_JOINTS_0.x)] +
-    a_WEIGHTS_0.y * u_jointMatrix[int(a_JOINTS_0.y)] +
-    a_WEIGHTS_0.z * u_jointMatrix[int(a_JOINTS_0.z)] +
-    a_WEIGHTS_0.w * u_jointMatrix[int(a_JOINTS_0.w)];
+    a_WEIGHTS_0.x * u_jointMatrices[int(a_JOINTS_0.x)] +
+    a_WEIGHTS_0.y * u_jointMatrices[int(a_JOINTS_0.y)] +
+    a_WEIGHTS_0.z * u_jointMatrices[int(a_JOINTS_0.z)] +
+    a_WEIGHTS_0.w * u_jointMatrices[int(a_JOINTS_0.w)];
 
   vec4 pos = u_ModelMatrix * skinMat * vec4(a_POSITION, 1.);
-  // vec4 pos = u_ModelMatrix * vec4(a_POSITION, 1.);
-  v_POSITION = vec3(pos.xyz) / pos.w;
+  #else
+  vec4 pos = u_ModelMatrix * vec4(a_POSITION, 1.);
+  #endif
+  // v_POSITION = vec3(pos.xyz) / pos.w;
 
   // vec3 normalW = normalize(vec3(u_NormalMatrix * vec4(a_NORMAL.xyz, 0.0)));
   // vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(a_TANGENT.xyz, 0.0)));

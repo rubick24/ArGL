@@ -60,13 +60,16 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
   // use default unlit material now
   const materials = getMaterials(gl, json, images)
 
+  const nodes = getNodes(json)
   const meshes = getMeshes(gl, json, accessors, materials)
-
-  const nodes = getNodes(json, meshes)
-
-  const scenes = getScenes(json, nodes)
+  nodes.forEach((n, i) => {
+    const node = json.nodes?.[n.index]
+    nodes[i].mesh = node?.mesh !== undefined ? meshes[node.mesh] : undefined
+  })
 
   const computeJoints = getSkins(json, accessors, nodes)
+
+  const scenes = getScenes(json, nodes)
 
   const animations = getAnimations(json, accessors, nodes)
 

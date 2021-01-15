@@ -2,7 +2,6 @@ import { mat4 } from 'gl-matrix'
 import { GlTF } from '../types/glTF'
 import { IAccessor, INode, ComputeJoints } from './interfaces'
 
-
 export default (json: GlTF, accessors: IAccessor[], nodes: INode[]): ComputeJoints => {
   if (!json.skins) {
     return () => {}
@@ -18,9 +17,13 @@ export default (json: GlTF, accessors: IAccessor[], nodes: INode[]): ComputeJoin
       const node = nodes[joint]
 
       let jointMatrix = mat4.create()
-      let ibm = skin.inverseBindMatricesAccessor ? (skin.inverseBindMatricesAccessor.bufferData.slice(i * 16, i * 16 + 16) as mat4) : identity
+      let ibm = skin.inverseBindMatricesAccessor
+        ? (skin.inverseBindMatricesAccessor.bufferData.slice(i * 16, i * 16 + 16) as mat4)
+        : identity
+
       mat4.mul(jointMatrix, node.worldTransform, ibm)
-      mat4.mul(jointMatrix, parentNode.inverseWorldTransform || identity, jointMatrix)
+      mat4.mul(jointMatrix, parentNode.inverseWorldTransform, jointMatrix)
+
       jointMatrices.push(jointMatrix)
 
       // let normalMatrix = mat4.create()
@@ -46,7 +49,7 @@ export default (json: GlTF, accessors: IAccessor[], nodes: INode[]): ComputeJoin
       joints: skinJson.joints,
       inverseBindMatricesAccessor: accessor,
       jointMatrices,
-      jointNormalMatrices,
+      jointNormalMatrices
     }
   })
 
