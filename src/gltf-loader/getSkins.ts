@@ -10,7 +10,7 @@ export default (json: GlTF, accessors: IAccessor[], nodes: INode[]): ComputeJoin
 
   const computeJoints: ComputeJoints = (skin, parentNode) => {
     const jointMatrices = []
-    // const jointNormalMatrices = []
+    const jointNormalMatrices = []
 
     for (let i = 0; i < skin.joints.length; i++) {
       const joint = skin.joints[i]
@@ -26,13 +26,13 @@ export default (json: GlTF, accessors: IAccessor[], nodes: INode[]): ComputeJoin
 
       jointMatrices.push(jointMatrix)
 
-      // let normalMatrix = mat4.create()
-      // mat4.invert(normalMatrix, jointMatrix)
-      // mat4.transpose(normalMatrix, normalMatrix)
-      // jointNormalMatrices.push(normalMatrix)
+      let normalMatrix = mat4.create()
+      mat4.invert(normalMatrix, jointMatrix)
+      mat4.transpose(normalMatrix, normalMatrix)
+      jointNormalMatrices.push(normalMatrix)
     }
     skin.jointMatrices = jointMatrices
-    // skin.jointNormalMatrices = jointNormalMatrices
+    skin.jointNormalMatrices = jointNormalMatrices
 
     // return [ jointMatrices, jointNormalMatrices ]
   }

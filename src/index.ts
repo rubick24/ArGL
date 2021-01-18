@@ -3,6 +3,7 @@ import ArcRotateCamera from './camera/ArcRotateCamera'
 import DesktopInput from './input/DesktopInput'
 import { vec3 } from 'gl-matrix'
 import createParticles from './particle/particle'
+import axis from './axis/axis'
 
 const canvas = document.getElementById('main') as HTMLCanvasElement
 canvas.height = window.innerHeight
@@ -43,7 +44,8 @@ const start = async () => {
   //   gravity: [0, 0, 0],
   //   ageRange: [29, 30],
   // })
-  // const projectionMatrix = camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.1, 1000)
+  const projectionMatrix = camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.1, 1000)
+  const drawAxis = await axis(gl)
 
   gl.clearColor(0, 0, 0, 0)
   const renderLoop = (time: number) => {
@@ -54,7 +56,9 @@ const start = async () => {
       gl.viewport(0, 0, canvas.width, canvas.height)
     }
     camera.processDesktopInput(di)
+    drawAxis({ viewMatrix: camera.viewMatrix, projectionMatrix })
     render(scenes[0], camera, time)
+
     // snow({ time, viewMatrix: camera.viewMatrix, projectionMatrix })
     requestAnimationFrame(renderLoop)
   }

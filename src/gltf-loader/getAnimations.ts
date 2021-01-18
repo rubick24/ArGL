@@ -5,12 +5,12 @@ export default (json: GlTF, accessors: IAccessor[], nodes: INode[]) => {
   if (!json.animations) {
     return []
   }
-  const targetNodes: {
-    node: INode
-    channels: IAnimationCannel[]
-  }[] = []
   const animations = json.animations.map(
     (a): IAnimation => {
+      const targetNodes: {
+        node: INode
+        channels: IAnimationCannel[]
+      }[] = []
       a.channels.forEach(c => {
         if (c.target.node === undefined || json.accessors === undefined) {
           return
