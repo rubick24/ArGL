@@ -2,10 +2,6 @@ import { GlTF } from '../types/glTF'
 import { INode } from './interfaces'
 import { vec3, mat4, quat } from 'gl-matrix'
 
-const defaultTranslation = vec3.create()
-const defaultRotation = quat.create()
-const defaultScale = vec3.fromValues(1, 1, 1)
-
 const getNodes = (json: GlTF) => {
   if (!json.nodes) {
     return []
@@ -13,20 +9,41 @@ const getNodes = (json: GlTF) => {
   const inodes = json.nodes.map(
     (node, i): INode => {
       let matrix = mat4.create()
+      let translation = vec3.create()
+      let rotation = quat.create()
+      let scale = vec3.fromValues(1, 1, 1)
       if (node.matrix) {
         matrix = new Float32Array(node.matrix)
+        mat4.getScaling(scale, matrix)
+        // To extract a correct rotation, the scaling component must be eliminated.
+        const mn = mat4.create()
+        for (const col of [0, 1, 2]) {
+          mn[col] = matrix[col] / scale[0]
+          mn[col + 4] = matrix[col + 4] / scale[1]
+          mn[col + 8] = matrix[col + 8] / scale[2]
+        }
+        mat4.getRotation(rotation, mn)
+        quat.normalize(rotation, rotation)
+        mat4.getTranslation(translation, matrix)
       } else {
-        const translation = node.translation as vec3 || defaultTranslation
-        const rotation = node.rotation as quat || defaultRotation
-        const scale = node.scale as vec3 || defaultScale
-        mat4.fromRotationTranslationScale(matrix, rotation, translation, scale)
+        if (node.rotation) {
+          rotation = new Float32Array(node.rotation) as quat
+        }
+        if (node.translation) {
+          translation = new Float32Array(node.translation) as vec3
+        }
+        if (node.scale) {
+          scale = new Float32Array(node.scale) as vec3
+        }
       }
       return {
         name: node.name || '',
         index: i,
-        matrix,
         mesh: undefined,
         children: undefined,
+        translation,
+        rotation,
+        scale,
         localTransform: mat4.create(),
         worldTransform: mat4.create(),
         inverseWorldTransform: mat4.create(),

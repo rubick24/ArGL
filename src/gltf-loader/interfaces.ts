@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { mat4, quat, vec3 } from 'gl-matrix'
 import Shader from '../shader'
 
 export type GLType = 'SCALAR' | 'VEC2' | 'VEC3' | 'VEC4' | 'MAT2' | 'MAT3' | 'MAT4'
@@ -67,8 +67,9 @@ export type ComputeJoints = (skin: ISkin, node: INode) => void
 export interface INode {
   name: string
   index: number
-  matrix: mat4
-  // animationMatrix?: mat4
+  rotation: quat
+  translation: vec3
+  scale: vec3
   localTransform: mat4
   worldTransform: mat4
   inverseWorldTransform: mat4

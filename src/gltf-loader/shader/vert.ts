@@ -1,7 +1,7 @@
 export default (props?: any) => `#version 300 es
 precision mediump float;
-${ props?.defines || ''}
-${ props?.attrs || ''}
+${props?.defines || ''}
+${props?.attrs || ''}
 
 uniform mat4 u_ModelMatrix;
 uniform mat4 u_ViewMatrix;

@@ -15,7 +15,7 @@ if (!gl) {
 gl.viewport(0, 0, canvas.width, canvas.height)
 
 gl.enable(gl.DEPTH_TEST)
-// gl.enable(gl.CULL_FACE)
+gl.enable(gl.CULL_FACE)
 gl.enable(gl.BLEND)
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
@@ -25,26 +25,30 @@ const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 2, Math.P
 const di = new DesktopInput(canvas)
 
 const start = async () => {
-  const { json, scenes, render, animations, animate } = await loadGLTF('/t.glb', gl)
-  console.log(animations)
-  setTimeout(() => {
-    animate(animations[0])
-  }, 3000)
+  const { json, scenes, render, animations, animate } = await loadGLTF('/ybot.glb', gl)
 
-  // const snow = await createParticles(gl, {
-  //   texture: './particle.png',
-  //   scale: 1,
-  //   numParticles: 1e4,
-  //   particleBirthRate: 500,
-  //   originA: [4, 3, -4],
-  //   originB: [-4, 3, 4],
-  //   angle: [0, -1, 0],
-  //   angleRadius: Math.PI / 4,
-  //   speedRange: [0.3, 0.6],
-  //   gravity: [0, 0, 0],
-  //   ageRange: [29, 30],
-  // })
-  const projectionMatrix = camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.1, 1000)
+  setInterval(() => {
+    animate(animations[0])
+  }, animations[0].duration * 1000)
+
+  const snow = await createParticles(gl, {
+    texture: './particle.png',
+    scale: 1,
+    numParticles: 1e4,
+    particleBirthRate: 500,
+    originA: [4, 3, -4],
+    originB: [-4, 3, 4],
+    angle: [0, -1, 0],
+    angleRadius: Math.PI / 4,
+    speedRange: [0.3, 0.6],
+    gravity: [0, 0, 0],
+    ageRange: [29, 30],
+  })
+  const projectionMatrix = camera.getProjectionMatrix(
+    gl.canvas.width / gl.canvas.height,
+    0.01,
+    1000
+  )
   const drawAxis = await axis(gl)
 
   gl.clearColor(0, 0, 0, 0)
@@ -59,7 +63,7 @@ const start = async () => {
     drawAxis({ viewMatrix: camera.viewMatrix, projectionMatrix })
     render(scenes[0], camera, time)
 
-    // snow({ time, viewMatrix: camera.viewMatrix, projectionMatrix })
+    snow({ time, viewMatrix: camera.viewMatrix, projectionMatrix })
     requestAnimationFrame(renderLoop)
   }
   requestAnimationFrame(renderLoop)

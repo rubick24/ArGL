@@ -68,6 +68,9 @@ export default class ArcRotateCamera {
     } else if (this.beta < this.minBetaLimit) {
       this.beta = this.minBetaLimit
     }
+    if (this.radius <= 0.1) {
+      this.radius = 0.1
+    }
   }
 
   public updateViewMatrix() {

@@ -10,8 +10,9 @@ let projectionMatrix: mat4 | null = null
 
 export default (gl: WebGL2RenderingContext, nodes: INode[], computeJoints: ComputeJoints) => {
   const applyTransform = (node: INode, parentTransform: mat4) => {
-    mat4.mul(node.worldTransform, parentTransform, node.matrix)
-    mat4.mul(node.worldTransform, node.worldTransform, node.localTransform)
+    const t = mat4.create()
+    mat4.fromRotationTranslationScale(t, node.rotation, node.translation, node.scale)
+    mat4.mul(node.worldTransform, parentTransform, t)
     mat4.invert(node.inverseWorldTransform, node.worldTransform)
     if (node.children) {
       node.children.forEach(child => {
@@ -40,11 +41,6 @@ export default (gl: WebGL2RenderingContext, nodes: INode[], computeJoints: Compu
     if (!projectionMatrix) {
       projectionMatrix = camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.1, 1000)
     }
-
-    nodes.forEach(node => {
-      // 重置动画矩阵？
-      mat4.identity(node.localTransform)
-    })
 
     frameHooks.beforeDraw.map(v => v(time))
 
