@@ -1,12 +1,15 @@
 import { GlTF } from '../types/glTF'
-import { IAccessor, IPrimitive, IMaterial, IMesh } from './interfaces'
+import { IAccessor, IPrimitive, IMaterial, IMesh, ISkin } from './interfaces'
 import getDefaultMaterial from './getDefaultMaterial'
+import Shader from '../shader'
+import vsSource from './shader/vert'
+import fsSource from './shader/frag'
 
 export default (
   gl: WebGL2RenderingContext,
   json: GlTF,
   accessors: IAccessor[],
-  materials: IMaterial[]
+  materials: IMaterial[],
 ) => {
   if (!json.meshes) {
     throw new Error('glTFLoader: no meshes found')
@@ -38,26 +41,54 @@ export default (
             material = materials[primitive.material]
           }
 
-          // const attributes = Object.keys(primitive.attributes)
-          const attributes = ['POSITION', 'NORMAL', 'TANGENT', 'TEXCOORD_0']
+          const attributeKeys = Object.keys(primitive.attributes)
+          // const attributes = ['POSITION', 'NORMAL', 'TANGENT', 'TEXCOORD_0']
 
-          attributes.forEach(k => {
+          const attrs: { attrType: string, name: string }[] = []
+
+          attributeKeys.forEach((k, i) => {
             const buffer = gl.createBuffer()
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
             const accessor = accessors[primitive.attributes[k]]
             gl.bufferData(gl.ARRAY_BUFFER, accessor.bufferData, gl.STATIC_DRAW)
-            const attrLocation = gl.getAttribLocation(material.shader.program, 'a_' + k)
+            // const attrLocation = gl.getAttribLocation(shader.program, 'a_' + k)
+            gl.enableVertexAttribArray(i)
             gl.vertexAttribPointer(
-              attrLocation,
+              i, // attrLocation
               accessor.itemSize,
               accessor.componentType,
               false,
               0,
               0
             )
-            gl.enableVertexAttribArray(attrLocation)
+            const glslType = accessor.type === 'SCALAR' ? 'float' : accessor.type.toLocaleLowerCase()
+
+            attrs.push({
+              attrType: glslType,
+              name: k
+            })
           })
           gl.bindVertexArray(null)
+
+          const vertDefines: string[] = []
+          if (attributeKeys.includes('JOINTS_0')) {
+            const jointCount = json.skins?.reduce((p, c) => Math.max(p, c.joints.length), 0) || 0
+            if (jointCount) {
+              vertDefines.push(`#define USE_SKINNING 1`)
+              vertDefines.push(`#define JOINT_COUNT ${jointCount}`)
+            }
+          }
+
+          const shader = new Shader({
+            gl,
+            vs: vsSource({
+              defines: vertDefines.join('\n'),
+              attrs: attrs.map((v, i) => `layout (location = ${i}) in ${v.attrType} a_${v.name};`).join('\n')
+            }),
+            fs: fsSource(),
+
+          })
+
           return {
             indices: {
               accessor,
@@ -65,6 +96,7 @@ export default (
             },
             vao,
             material,
+            shader,
             mode: primitive.mode === undefined ? 4 : primitive.mode
           }
         }

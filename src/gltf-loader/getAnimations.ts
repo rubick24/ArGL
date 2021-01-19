@@ -1,7 +1,5 @@
 import { IAccessor, IAnimationCannel, IAnimation, INode } from './interfaces'
 import { GlTF } from '../types/glTF'
-import frameHooks from './frameHooks'
-import { mat4 } from 'gl-matrix'
 
 export default (json: GlTF, accessors: IAccessor[], nodes: INode[]) => {
   if (!json.animations) {
@@ -9,23 +7,37 @@ export default (json: GlTF, accessors: IAccessor[], nodes: INode[]) => {
   }
   const animations = json.animations.map(
     (a): IAnimation => {
-      const channels = a.channels.reduce((res, c) => {
+      const targetNodes: {
+        node: INode
+        channels: IAnimationCannel[]
+      }[] = []
+      a.channels.forEach(c => {
         if (c.target.node === undefined || json.accessors === undefined) {
-          return res
+          return
         }
         const sampler = a.samplers[c.sampler]
         const inputAccessor = accessors[sampler.input]
         const outputAccessor = accessors[sampler.output]
         if (inputAccessor.max === undefined || inputAccessor.min === undefined) {
-          return res
+          return
         }
         const duration = inputAccessor.max[0]
         if (duration <= 0) {
-          return res
+          return
         }
 
         const interval = duration / inputAccessor.bufferData.length
-        res.push({
+
+        let targetNodeIndex = targetNodes.findIndex(v => v.node === nodes[c.target.node as number])
+        if (targetNodeIndex < 0) {
+          targetNodeIndex = targetNodes.length
+          targetNodes.push({
+            node: nodes[c.target.node],
+            channels: []
+          })
+        }
+
+        targetNodes[targetNodeIndex].channels.push({
           targetNode: nodes[c.target.node],
           path: c.target.path,
           duration: duration,
@@ -34,23 +46,21 @@ export default (json: GlTF, accessors: IAccessor[], nodes: INode[]) => {
           outputAccessor,
           interpolation: sampler.interpolation
         })
-        return res
-      }, [] as IAnimationCannel[])
+      })
       return {
         name: a.name || '',
-        channels,
-        duration: channels.reduce((p, v) => Math.max(p, v.duration), 0)
+        targetNodes,
+        duration: targetNodes.reduce(
+          (p, v) =>
+            Math.max(
+              p,
+              v.channels.reduce((pi, vi) => Math.max(pi, vi.duration), 0)
+            ),
+          0
+        )
       }
     }
   )
-
-  frameHooks.beforeDraw.push(() => {
-    nodes.forEach(n => {
-      if (n.animationMatrix) {
-        mat4.identity(n.animationMatrix)
-      }
-    })
-  })
 
   return animations
 }

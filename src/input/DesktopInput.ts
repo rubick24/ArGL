@@ -56,10 +56,10 @@ export default class DesktopInput {
     const addInputListener = () => {
       el.addEventListener('keydown', handleKeyDown)
       el.addEventListener('keyup', handleKeyUp)
-      el.addEventListener('mousemove', handleMouseMove)
+      el.addEventListener('mousemove', handleMouseMove, { passive: true })
       el.addEventListener('mousedown', handleDragStart)
       el.addEventListener('mouseup', handleDragEnd)
-      el.addEventListener('wheel', handleWheel)
+      el.addEventListener('wheel', handleWheel, { passive: true })
       const af = () => {
         const now = performance.now()
         if (now - this.t > 100) {

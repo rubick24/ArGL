@@ -3,7 +3,6 @@ import { GLArrayType, IAccessor } from './interfaces'
 
 const tempM0 = vec3.create()
 const tempM1 = vec3.create()
-const tempRes = vec3.create()
 const tempQuat = quat.create()
 
 const common = (inputAccessor: IAccessor, outputAccessor: IAccessor, currentTime: number) => {
@@ -35,6 +34,7 @@ const common = (inputAccessor: IAccessor, outputAccessor: IAccessor, currentTime
 }
 
 export const getLerpVec3 = (
+  out: vec3,
   inputAccessor: IAccessor,
   outputAccessor: IAccessor,
   interpolation: string | undefined,
@@ -66,12 +66,12 @@ export const getLerpVec3 = (
     const p1 = nextVal.vk
     const m0 = vec3.scale(tempM0, preVal.bk as vec3, nextTime - previousTime)
     const m1 = vec3.scale(tempM1, nextVal.ak as vec3, nextTime - previousTime)
-    const res = tempRes
-    vec3.scaleAndAdd(res, res, p0 as vec3, 2 * t ** 3 - 3 * t ** 2 + 1)
-    vec3.scaleAndAdd(res, res, m0, t ** 3 - 2 * t ** 2 + t)
-    vec3.scaleAndAdd(res, res, p1 as vec3, -2 * t ** 3 + 3 * t ** 2)
-    vec3.scaleAndAdd(res, res, m1, t ** 3 - t ** 2)
-    return res
+
+    vec3.scaleAndAdd(out, out, p0 as vec3, 2 * t ** 3 - 3 * t ** 2 + 1)
+    vec3.scaleAndAdd(out, out, m0, t ** 3 - 2 * t ** 2 + t)
+    vec3.scaleAndAdd(out, out, p1 as vec3, -2 * t ** 3 + 3 * t ** 2)
+    vec3.scaleAndAdd(out, out, m1, t ** 3 - t ** 2)
+
   } else {
     const pi = prevIndex * 3
     const ni = nextIndex * 3
@@ -82,11 +82,12 @@ export const getLerpVec3 = (
 
     // default: interpolation === 'LINEAR'
     const nextVal = [d[ni], d[ni + 1], d[ni + 2]] as vec3
-    return vec3.lerp(tempRes, preVal, nextVal, t)
+    return vec3.lerp(out, preVal, nextVal, t)
   }
 }
 
 export const getLerpQuat = (
+  out: quat,
   inputAccessor: IAccessor,
   outputAccessor: IAccessor,
   interpolation: string | undefined,
@@ -105,7 +106,7 @@ export const getLerpQuat = (
   const preVal = outputAccessor.bufferData.slice(pi, pi + 4) as quat
   const nextVal = outputAccessor.bufferData.slice(ni, ni + 4) as quat
 
-  return quat.slerp(tempQuat, preVal, nextVal, t)
+  quat.slerp(out, preVal, nextVal, t)
 }
 
 export const getLerpFloat = (

@@ -1,16 +1,16 @@
 import { GlTF } from '../types/glTF'
 import { IMaterial, UniformType } from './interfaces'
 import getTextures from './getTextures'
-import Shader from '../shader'
-import vsSource from './shader/m.vert'
-import fsSource from './shader/m.frag'
+// import Shader from '../shader'
+// import vsSource from './shader/m.vert'
+// import fsSource from './shader/m.frag'
 
-let shader: Shader
+// let shader: Shader
 
 export default (gl: WebGL2RenderingContext, json: GlTF, images: HTMLImageElement[]) => {
-  if (!shader) {
-    shader = new Shader({ gl, vs: vsSource, fs: fsSource })
-  }
+  // if (!shader) {
+  //   shader = new Shader({ gl, vs: vsSource, fs: fsSource })
+  // }
   if (!json.materials) {
     return []
   }
@@ -46,7 +46,7 @@ export default (gl: WebGL2RenderingContext, json: GlTF, images: HTMLImageElement
 
       const textures = textureIndexes.map((v, i) => getTextures(gl, json, images, v.index, i))
       return {
-        shader,
+        // shader,
         uniforms,
         textures
       }

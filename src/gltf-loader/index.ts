@@ -7,6 +7,7 @@ import getMaterials from './getMaterials'
 import getNodes from './getNodes'
 import getScenes from './getScenes'
 import getAnimations from './getAnimations'
+import getSkins from './getSkins'
 
 import draw from './draw'
 import render from './render'
@@ -59,13 +60,20 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
   // use default unlit material now
   const materials = getMaterials(gl, json, images)
 
+  const nodes = getNodes(json)
   const meshes = getMeshes(gl, json, accessors, materials)
+  nodes.forEach((n, i) => {
+    const node = json.nodes?.[n.index]
+    nodes[i].mesh = node?.mesh !== undefined ? meshes[node.mesh] : undefined
+  })
 
-  const nodes = getNodes(json, meshes)
+  const computeJoints = getSkins(json, accessors, nodes)
 
   const scenes = getScenes(json, nodes)
 
   const animations = getAnimations(json, accessors, nodes)
+
+
 
   return {
     json,
@@ -74,7 +82,7 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
     meshes,
     animations,
     draw: draw(gl),
-    render: render(gl),
+    render: render(gl, nodes, computeJoints),
     animate
     // cameras
   }
