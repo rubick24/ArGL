@@ -1,5 +1,6 @@
 import { IAccessor, IAnimationCannel, IAnimation, INode } from './interfaces'
 import { GlTF } from '../types/glTF'
+import animate from './animate'
 
 export default (json: GlTF, accessors: IAccessor[], nodes: INode[]) => {
   if (!json.animations) {
@@ -62,5 +63,5 @@ export default (json: GlTF, accessors: IAccessor[], nodes: INode[]) => {
     }
   )
 
-  return animations
+  return animations.map(a => animate(a))
 }

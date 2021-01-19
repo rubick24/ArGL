@@ -1,16 +1,8 @@
 import { GlTF } from '../types/glTF'
 import { IMaterial, UniformType } from './interfaces'
 import getTextures from './getTextures'
-// import Shader from '../shader'
-// import vsSource from './shader/m.vert'
-// import fsSource from './shader/m.frag'
-
-// let shader: Shader
 
 export default (gl: WebGL2RenderingContext, json: GlTF, images: HTMLImageElement[]) => {
-  // if (!shader) {
-  //   shader = new Shader({ gl, vs: vsSource, fs: fsSource })
-  // }
   if (!json.materials) {
     return []
   }

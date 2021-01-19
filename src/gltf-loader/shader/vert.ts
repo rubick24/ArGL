@@ -9,8 +9,12 @@ uniform mat4 u_ProjectionMatrix;
 uniform mat4 u_NormalMatrix;
 
 #ifdef USE_SKINNING
-uniform mat4 u_jointMatrices[JOINT_COUNT];
-uniform mat4 u_jointNormalMatrices[JOINT_COUNT];
+uniform JointMatrices {
+  mat4 u_jointMatrices[JOINT_COUNT];
+};
+uniform JointNormalMatrices {
+  mat4 u_jointNormalMatrices[JOINT_COUNT];
+};
 #endif
 
 out vec2 v_TEXCOORD_0;

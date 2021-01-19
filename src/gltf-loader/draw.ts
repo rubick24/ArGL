@@ -25,10 +25,9 @@ export default (gl: WebGL2RenderingContext) => (
 
     if (node.skin !== undefined /* && primitive.hasWeights && primitive.hasJoints */) {
       const skin = node.skin
-      skin.jointMatrices.forEach((v, i) => {
-        shader.setUniform(`u_jointMatrices[${i}]`, 'MAT4', v)
-        shader.setUniform(`u_jointNormalMatrices[${i}]`, 'MAT4', skin.jointNormalMatrices[i])
-      })
+
+      shader.setUniformBuffer('u_jointMatrices', skin.jointMatrices)
+      shader.setUniformBuffer('u_jointNormalMatrices', skin.jointNormalMatrices)
     }
 
     shader.setUniform('u_ModelMatrix', 'MAT4', modelMatrix)

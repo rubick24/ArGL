@@ -1,10 +1,6 @@
 import { IMaterial, UniformType } from './interfaces'
-// import Shader from '../shader'
-// import vsSource from './shader/m.vert'
-// import fsSource from './shader/m.frag'
 
 const i = new Image()
-// i.addEventListener('load', () => {})
 i.src =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQYV2PYtGnTfwAHRgMW7aoU3gAAAABJRU5ErkJggg=='
 

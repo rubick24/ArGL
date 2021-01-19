@@ -26,6 +26,7 @@ export default class Shader {
   gl: WebGL2RenderingContext
   program: WebGLProgram
   locations: Map<string, WebGLUniformLocation | null>
+  unifromBuffers: any
 
   constructor({
     gl,
@@ -56,6 +57,7 @@ export default class Shader {
     this.gl = gl
     this.program = shaderProgram
     this.locations = new Map()
+    this.unifromBuffers = {}
   }
 
   use() {
@@ -65,6 +67,7 @@ export default class Shader {
     let location = this.locations.get(name)
     if (!location) {
       location = this.gl.getUniformLocation(this.program, name)
+      this.locations.set(name, location)
     }
 
     switch (type) {
@@ -89,5 +92,19 @@ export default class Shader {
       default:
         return
     }
+  }
+  setUniformBuffer(name: string, data: Float32Array) {
+    const gl = this.gl
+    let buffer = this.unifromBuffers[name]
+    if (!buffer) {
+      buffer = gl.createBuffer()
+      gl.bindBuffer(gl.UNIFORM_BUFFER, buffer)
+      gl.uniformBlockBinding(this.program, 0, 0)
+      gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, buffer)
+      this.unifromBuffers[name] = buffer
+    }
+
+    gl.bindBuffer(gl.UNIFORM_BUFFER, buffer)
+    gl.bufferData(gl.UNIFORM_BUFFER, data, gl.DYNAMIC_DRAW)
   }
 }

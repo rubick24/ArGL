@@ -25,11 +25,9 @@ const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 2, Math.P
 const di = new DesktopInput(canvas)
 
 const start = async () => {
-  const { json, scenes, render, animations, animate } = await loadGLTF('/ybot.glb', gl)
+  const { json, scenes, render, animations } = await loadGLTF('/ybot.glb', gl)
 
-  setInterval(() => {
-    animate(animations[0])
-  }, animations[0].duration * 1000)
+  animations[0].play()
 
   const snow = await createParticles(gl, {
     texture: './particle.png',

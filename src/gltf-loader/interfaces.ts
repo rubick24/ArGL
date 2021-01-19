@@ -59,8 +59,8 @@ export interface IMesh {
 export interface ISkin {
   joints: number[]
   inverseBindMatricesAccessor: IAccessor | null
-  jointMatrices: mat4[]
-  jointNormalMatrices: mat4[]
+  jointMatrices: Float32Array
+  jointNormalMatrices: Float32Array
 }
 export type ComputeJoints = (skin: ISkin, node: INode) => void
 

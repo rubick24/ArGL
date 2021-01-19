@@ -67,7 +67,7 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
     nodes[i].mesh = node?.mesh !== undefined ? meshes[node.mesh] : undefined
   })
 
-  const computeJoints = getSkins(json, accessors, nodes)
+  const computeJoints = getSkins(gl, json, accessors, nodes)
 
   const scenes = getScenes(json, nodes)
 
@@ -83,7 +83,6 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
     animations,
     draw: draw(gl),
     render: render(gl, nodes, computeJoints),
-    animate
     // cameras
   }
 }

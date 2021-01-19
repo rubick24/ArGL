@@ -8,7 +8,6 @@ in vec2 v_TEXCOORD_0;
 in vec3 v_NORMAL;
 // in vec3 v_POSITION;
 //in mat3 v_TBN;
-${props?.in || ''}
 
 out vec4 FragColor;
 

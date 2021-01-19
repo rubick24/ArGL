@@ -3,7 +3,6 @@ import { GLArrayType, IAccessor } from './interfaces'
 
 const tempM0 = vec3.create()
 const tempM1 = vec3.create()
-const tempQuat = quat.create()
 
 const common = (inputAccessor: IAccessor, outputAccessor: IAccessor, currentTime: number) => {
   // maybe replace this by interval?
@@ -64,13 +63,13 @@ export const getLerpVec3 = (
     }
     const p0 = preVal.vk
     const p1 = nextVal.vk
-    const m0 = vec3.scale(tempM0, preVal.bk as vec3, nextTime - previousTime)
-    const m1 = vec3.scale(tempM1, nextVal.ak as vec3, nextTime - previousTime)
+    vec3.scale(tempM0, preVal.bk as vec3, nextTime - previousTime)
+    vec3.scale(tempM1, nextVal.ak as vec3, nextTime - previousTime)
 
     vec3.scaleAndAdd(out, out, p0 as vec3, 2 * t ** 3 - 3 * t ** 2 + 1)
-    vec3.scaleAndAdd(out, out, m0, t ** 3 - 2 * t ** 2 + t)
+    vec3.scaleAndAdd(out, out, tempM0, t ** 3 - 2 * t ** 2 + t)
     vec3.scaleAndAdd(out, out, p1 as vec3, -2 * t ** 3 + 3 * t ** 2)
-    vec3.scaleAndAdd(out, out, m1, t ** 3 - t ** 2)
+    vec3.scaleAndAdd(out, out, tempM1, t ** 3 - t ** 2)
 
   } else {
     const pi = prevIndex * 3

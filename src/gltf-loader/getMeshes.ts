@@ -19,10 +19,10 @@ export default (
     (mesh): IMesh => {
       const primitives = mesh.primitives.map(
         (primitive): IPrimitive => {
-          // if () {
-          //   // TODO: support no indices primitive
-          //   throw new Error('glTFLoader: primitive.indices is undefined')
-          // }
+          if (!primitive.indices) {
+            // TODO: support no indices primitive
+            throw new Error('glTFLoader: primitive.indices is undefined')
+          }
           const vao = gl.createVertexArray()
           const buffer = gl.createBuffer()
           if (primitive.indices === undefined || !vao || !buffer) {
