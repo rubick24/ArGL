@@ -179,6 +179,10 @@ export default async (gl: WebGL2RenderingContext, config: any) => {
   })()
 
   let bornParticles = 0
+  // 兼容单帧新增数小于1的情况
+  let increaseFloat = 0
+  let increaseTemp = 0
+
   const renderLoop = ({
     time,
     viewMatrix,
@@ -188,10 +192,18 @@ export default async (gl: WebGL2RenderingContext, config: any) => {
     viewMatrix: mat4
     projectionMatrix: mat4
   }) => {
+    increaseFloat += particleBirthRate / 60
+    const increase = Math.floor(increaseFloat) - increaseTemp
+    if (increase > 0) {
+      increaseFloat -= increase
+      increaseTemp = 0
+    }
 
-    bornParticles = Math.min(numParticles, Math.floor(bornParticles + particleBirthRate / 60))
-    updatePass()
-    displayPass({ viewMatrix, projectionMatrix })
+    bornParticles = Math.min(numParticles, bornParticles + increase)
+    if (bornParticles > 0) {
+      updatePass()
+      displayPass({ viewMatrix, projectionMatrix })
+    }
     read = (read + 1) % 2
     write = (write + 1) % 2
   }

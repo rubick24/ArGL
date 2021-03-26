@@ -7,6 +7,7 @@ export default class UniversalCamera {
 
   private _viewMaxtrix: mat4 = mat4.create()
   private _tempMat4: mat4 = mat4.create()
+  private _tempDir: vec3 = vec3.create()
 
   constructor(
     public position: vec3,
@@ -37,7 +38,8 @@ export default class UniversalCamera {
   }
 
   public updateViewMatrix() {
-    mat4.lookAt(this._viewMaxtrix, this.position, this.direction, this.up)
+    vec3.add(this._tempDir, this.position, this.direction)
+    mat4.lookAt(this._viewMaxtrix, this.position, this._tempDir, this.up)
   }
 
   public getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
@@ -47,5 +49,22 @@ export default class UniversalCamera {
 
   public processDesktopInput(di: DesktopInput) {
     //
+    if (!di.mouseInput.draging) {
+      return
+    }
+    const deltaX = di.mouseInput.x - di.mouseInput.lastX
+    const deltaY = di.mouseInput.y - di.mouseInput.lastY
+    let update = false
+    if (Math.abs(deltaX) > 1e-6) {
+      this.position[0] += (deltaX / 1000)
+      update = true
+    }
+    if (Math.abs(deltaY) > 1e-6) {
+      this.position[1] += (-deltaY / 1000)
+      update = true
+    }
+    if (update) {
+      this.updateViewMatrix()
+    }
   }
 }
