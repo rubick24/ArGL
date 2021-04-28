@@ -4,10 +4,10 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
   // devtool: 'inline-source-map',
-	entry: './src/index.ts',
-	output: {
-		filename: 'main.js',
-		path: path.resolve(__dirname, 'dist')
+  entry: './src/index.ts',
+  output: {
+    filename: 'main.js',
+    path: path.resolve(__dirname, 'dist')
   },
   resolve: {
     extensions: ['.wasm', '.mjs', '.js', '.json', '.ts', '.tsx']
@@ -30,6 +30,9 @@ module.exports = {
       template: 'src/index.html'
     })
   ],
+  experiments: {
+    topLevelAwait: true
+  },
   devServer: {
     host: '0.0.0.0',
     port: 8000,

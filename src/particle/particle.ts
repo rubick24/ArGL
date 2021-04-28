@@ -5,11 +5,13 @@ import updateFsSource from './shader/update.frag'
 import displayVsSource from './shader/display.vert'
 import displayFsSource from './shader/display.frag'
 
-const loadImage = (src: string): Promise<HTMLImageElement> => {
-  const img = new Image()
-  img.src = src
-  return new Promise(r => (img.onload = () => r(img)))
-}
+const loadImage = (src: string): Promise<HTMLImageElement> =>
+  new Promise(r => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => r(img)
+    img.src = src
+  })
 
 export default async (gl: WebGL2RenderingContext, config: any) => {
   // TODO config check
@@ -75,9 +77,9 @@ export default async (gl: WebGL2RenderingContext, config: any) => {
   let write = 1
   const buffers = new Array(2).fill(0).map(_ => gl.createBuffer())
   gl.bindBuffer(gl.ARRAY_BUFFER, buffers[0])
-  gl.bufferData(gl.ARRAY_BUFFER, initial_data, gl.STREAM_DRAW)
+  gl.bufferData(gl.ARRAY_BUFFER, initial_data, gl.DYNAMIC_DRAW)
   gl.bindBuffer(gl.ARRAY_BUFFER, buffers[1])
-  gl.bufferData(gl.ARRAY_BUFFER, initial_data, gl.STREAM_DRAW)
+  gl.bufferData(gl.ARRAY_BUFFER, initial_data, gl.DYNAMIC_DRAW)
 
   const updatePass = (() => {
     const vaos = new Array(2).fill(0).map((_, i) => {
@@ -153,7 +155,6 @@ export default async (gl: WebGL2RenderingContext, config: any) => {
       gl.enableVertexAttribArray(4)
       gl.vertexAttribPointer(4, 2, gl.FLOAT, true, 8, 0)
       gl.bindBuffer(gl.ARRAY_BUFFER, null)
-
       gl.bindVertexArray(null)
       return vao
     })

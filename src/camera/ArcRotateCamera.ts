@@ -29,7 +29,7 @@ export default class ArcRotateCamera {
     return new Proxy(this, {
       set: (t, key, value, receiver) => {
         const result = Reflect.set(t, key, value, receiver)
-        const observable = ['alpha', 'beta', 'radius']
+        const observable = ['alpha', 'beta', 'radius', 'target']
         if (observable.some(v => v === key)) {
           t._checkLimit()
           t.updateViewMatrix()
@@ -77,7 +77,7 @@ export default class ArcRotateCamera {
     const cosa = Math.cos(this.alpha)
     const sina = Math.sin(this.alpha)
     const cosb = Math.cos(this.beta)
-    const sinb = Math.sin(this.beta) !== 0 ? Math.sin(this.beta) : 0.0001
+    const sinb = Math.sin(this.beta) !== 0 ? Math.sin(this.beta) : Number.EPSILON
 
     if (!vec3.equals(this.up, up)) {
       vec3.cross(this._tempAxis, up, this.up)
@@ -99,6 +99,16 @@ export default class ArcRotateCamera {
   public getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
     // return mat4.ortho(this._tempMat4, -aspect*3, aspect*3, -3, 3, near, far)
     return mat4.perspective(this._tempMat4, this.fovy, aspect, near, far)
+  }
+  public getorthographicProjectionMatrix(
+    width: number,
+    height: number,
+    near: number,
+    far: number
+  ): mat4 {
+    const hw = width / 2
+    const hh = height / 2
+    return mat4.ortho(this._tempMat4, -hw, hw, -hh, hh, near, far)
   }
 
   public processDesktopInput(di: DesktopInput) {
