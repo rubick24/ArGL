@@ -11,9 +11,7 @@ if (!gl) {
 }
 gl.viewport(0, 0, canvas.width, canvas.height)
 
-const shader = new Shader({
-  gl, vs: vsSource, fs: fsSource
-})
+const shader = new Shader({ gl, vs: vsSource, fs: fsSource })
 shader.use()
 const quad = [-1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0]
 const quadVAO = gl.createVertexArray()
@@ -27,10 +25,12 @@ gl.bindBuffer(gl.ARRAY_BUFFER, null)
 // gl.bindVertexArray(null)
 
 shader.setUniform('iResolution', 'VEC2', [canvas.clientWidth, canvas.clientHeight])
-const handleGlobalClick = (e: MouseEvent) => {
-  shader.setUniform('iMouse', 'VEC2', [e.clientX, e.clientY])
+
+let pos = [0, 0]
+const handleMouseMove = (e: MouseEvent) => {
+  pos = [e.clientX, e.clientY]
 }
-window.addEventListener('click', handleGlobalClick)
+window.addEventListener('mousemove', handleMouseMove)
 
 gl.clearColor(0, 0, 0, 0)
 const renderLoop = (time: number) => {
@@ -42,6 +42,7 @@ const renderLoop = (time: number) => {
     gl.viewport(0, 0, canvas.width, canvas.height)
   }
   shader.setUniform('iTime', 'FLOAT', time)
+  shader.setUniform('iMouse', 'VEC2', pos)
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   requestAnimationFrame(renderLoop)
 }
