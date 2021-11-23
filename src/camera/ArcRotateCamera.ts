@@ -11,7 +11,7 @@ export default class ArcRotateCamera {
   public maxBetaLimit = Math.PI
   public minBetaLimit = 0
 
-  private _viewMaxtrix: mat4 = mat4.create()
+  private _viewMatrix: mat4 = mat4.create()
   private _position: vec3 = vec3.create()
   private _tempMat4: mat4 = mat4.create()
   private _tempAxis: vec3 = vec3.create()
@@ -22,7 +22,7 @@ export default class ArcRotateCamera {
     public alpha: number,
     public beta: number,
     public radius: number,
-    public fovy = Math.PI / 4,
+    public fovY = Math.PI / 4,
     public allowUpsideDown = true
   ) {
     this.updateViewMatrix()
@@ -40,7 +40,7 @@ export default class ArcRotateCamera {
   }
 
   public get viewMatrix() {
-    return this._viewMaxtrix
+    return this._viewMatrix
   }
 
   public get position() {
@@ -74,10 +74,10 @@ export default class ArcRotateCamera {
   }
 
   public updateViewMatrix() {
-    const cosa = Math.cos(this.alpha)
-    const sina = Math.sin(this.alpha)
-    const cosb = Math.cos(this.beta)
-    const sinb = Math.sin(this.beta) !== 0 ? Math.sin(this.beta) : Number.EPSILON
+    const cosA = Math.cos(this.alpha)
+    const sinA = Math.sin(this.alpha)
+    const cosB = Math.cos(this.beta)
+    const sinB = Math.sin(this.beta) !== 0 ? Math.sin(this.beta) : Number.EPSILON
 
     if (!vec3.equals(this.up, up)) {
       vec3.cross(this._tempAxis, up, this.up)
@@ -86,21 +86,21 @@ export default class ArcRotateCamera {
       mat4.fromRotation(this.rotationMatrix, angle, this._tempAxis)
     }
     const trans = vec3.fromValues(
-      this.radius * cosa * sinb,
-      this.radius * cosb,
-      this.radius * sina * sinb
+      this.radius * cosA * sinB,
+      this.radius * cosB,
+      this.radius * sinA * sinB
     )
     // vec3.normalize(trans, trans)
     vec3.transformMat4(trans, trans, this.rotationMatrix)
     vec3.add(this._position, this.target, trans)
-    mat4.lookAt(this._viewMaxtrix, this.position, this.target, this.up)
+    mat4.lookAt(this._viewMatrix, this.position, this.target, this.up)
   }
 
   public getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
     // return mat4.ortho(this._tempMat4, -aspect*3, aspect*3, -3, 3, near, far)
-    return mat4.perspective(this._tempMat4, this.fovy, aspect, near, far)
+    return mat4.perspective(this._tempMat4, this.fovY, aspect, near, far)
   }
-  public getorthographicProjectionMatrix(
+  public getOrthographicProjectionMatrix(
     width: number,
     height: number,
     near: number,
@@ -112,7 +112,7 @@ export default class ArcRotateCamera {
   }
 
   public processDesktopInput(di: DesktopInput) {
-    if (di.mouseInput.draging) {
+    if (di.mouseInput.dragging) {
       const deltaX = di.mouseInput.x - di.mouseInput.lastX
       const deltaY = di.mouseInput.y - di.mouseInput.lastY
       const radianX = (deltaX / di.el.clientWidth) * Math.PI * 2

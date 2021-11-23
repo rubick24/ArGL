@@ -58,7 +58,7 @@ export default class UniversalCamera {
 
   public processDesktopInput(di: DesktopInput) {
     //
-    if (!di.mouseInput.draging) {
+    if (!di.mouseInput.dragging) {
       return
     }
     const deltaX = di.mouseInput.x - di.mouseInput.lastX

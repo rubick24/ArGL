@@ -3,7 +3,7 @@ export interface IMouseInput {
   y: number
   lastX: number
   lastY: number
-  draging: boolean
+  dragging: boolean
   wheel: number
   lastWheel: number
 }
@@ -28,7 +28,7 @@ export default class DesktopInput {
       y: 0,
       lastX: 0,
       lastY: 0,
-      draging: false,
+      dragging: false,
       wheel: 0,
       lastWheel: 0
     }
@@ -48,10 +48,10 @@ export default class DesktopInput {
       this.mouseInput.wheel += e.deltaY
     }
     const handleDragStart = () => {
-      this.mouseInput.draging = true
+      this.mouseInput.dragging = true
     }
     const handleDragEnd = () => {
-      this.mouseInput.draging = false
+      this.mouseInput.dragging = false
     }
     const addInputListener = () => {
       el.addEventListener('keydown', handleKeyDown)

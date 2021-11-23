@@ -20,7 +20,7 @@ module.exports = {
       },
       {
         test: /\.(glsl|vert|frag|txt)$/,
-        use: 'raw-loader'
+        type: 'asset/source'
       }
     ]
   },
@@ -37,7 +37,6 @@ module.exports = {
     host: '0.0.0.0',
     port: 8000,
     hot: true,
-    disableHostCheck: true,
-    contentBase: path.join(__dirname, 'public')
+    static: path.join(__dirname, 'public')
   }
 }

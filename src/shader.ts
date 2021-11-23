@@ -26,14 +26,9 @@ export default class Shader {
   gl: WebGL2RenderingContext
   program: WebGLProgram
   locations: Map<string, WebGLUniformLocation | null>
-  unifromBuffers: any
+  uniformBuffers: any
 
-  constructor({
-    gl,
-    vs,
-    fs,
-    transformFeedbackVaryings
-  }: ShaderOptions) {
+  constructor({ gl, vs, fs, transformFeedbackVaryings }: ShaderOptions) {
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vs)
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fs)
     const shaderProgram = gl.createProgram()
@@ -57,7 +52,7 @@ export default class Shader {
     this.gl = gl
     this.program = shaderProgram
     this.locations = new Map()
-    this.unifromBuffers = {}
+    this.uniformBuffers = {}
   }
 
   use() {
@@ -95,13 +90,13 @@ export default class Shader {
   }
   setUniformBuffer(name: string, data: Float32Array) {
     const gl = this.gl
-    let buffer = this.unifromBuffers[name]
+    let buffer = this.uniformBuffers[name]
     if (!buffer) {
       buffer = gl.createBuffer()
       gl.bindBuffer(gl.UNIFORM_BUFFER, buffer)
       gl.uniformBlockBinding(this.program, 0, 0)
       gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, buffer)
-      this.unifromBuffers[name] = buffer
+      this.uniformBuffers[name] = buffer
     }
 
     gl.bindBuffer(gl.UNIFORM_BUFFER, buffer)
