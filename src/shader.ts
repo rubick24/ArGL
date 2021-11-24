@@ -1,3 +1,5 @@
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'
+
 const loadShader = (gl: WebGL2RenderingContext, type: number, source: string) => {
   const shader = gl.createShader(type)
   if (!shader) {
@@ -58,6 +60,16 @@ export default class Shader {
   use() {
     this.gl.useProgram(this.program)
   }
+
+  setUniform(name: string, type: 'BOOLEAN', value: boolean): void
+  setUniform(name: string, type: 'INT', value: number): void
+  setUniform(name: string, type: 'FLOAT', value: number): void
+  setUniform(name: string, type: 'VEC2', value: vec2): void
+  setUniform(name: string, type: 'VEC3', value: vec3): void
+  setUniform(name: string, type: 'VEC4', value: vec4): void
+  setUniform(name: string, type: 'MAT2', value: mat2): void
+  setUniform(name: string, type: 'MAT3', value: mat3): void
+  setUniform(name: string, type: 'MAT4', value: mat4): void
   setUniform(name: string, type: uType, value: any) {
     let location = this.locations.get(name)
     if (!location) {
