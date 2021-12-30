@@ -16,7 +16,6 @@ export default (
   const normalMatrix = mat4.create()
 
   const computeJoints: ComputeJoints = (skin, parentNode) => {
-
     for (let i = 0; i < skin.joints.length; i++) {
       const joint = skin.joints[i]
       const node = nodes[joint]

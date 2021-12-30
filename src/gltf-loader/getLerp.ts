@@ -70,7 +70,6 @@ export const getLerpVec3 = (
     vec3.scaleAndAdd(out, out, tempM0, t ** 3 - 2 * t ** 2 + t)
     vec3.scaleAndAdd(out, out, p1 as vec3, -2 * t ** 3 + 3 * t ** 2)
     vec3.scaleAndAdd(out, out, tempM1, t ** 3 - t ** 2)
-
   } else {
     const pi = prevIndex * 3
     const ni = nextIndex * 3

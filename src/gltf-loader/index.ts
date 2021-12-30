@@ -11,7 +11,7 @@ import getSkins from './getSkins'
 
 import draw from './draw'
 import render from './render'
-import animate from './animate'
+// import animate from './animate'
 
 const relativeURL = (base: string, target: string) => {
   if (base.lastIndexOf('/') !== -1) {
@@ -73,8 +73,6 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
 
   const animations = getAnimations(json, accessors, nodes)
 
-
-
   return {
     json,
     // scene,
@@ -82,7 +80,7 @@ const loadGLTF = async (url: string, gl: WebGL2RenderingContext) => {
     meshes,
     animations,
     draw: draw(gl),
-    render: render(gl, nodes, computeJoints),
+    render: render(gl, nodes, computeJoints)
     // cameras
   }
 }

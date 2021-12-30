@@ -15,7 +15,16 @@ const loadShader = (gl: WebGL2RenderingContext, type: number, source: string) =>
   return shader
 }
 
-type uType = 'BOOLEAN' | 'INT' | 'FLOAT' | 'VEC2' | 'VEC3' | 'VEC4' | 'MAT2' | 'MAT3' | 'MAT4'
+export type uType =
+  | 'BOOLEAN'
+  | 'INT'
+  | 'FLOAT'
+  | 'VEC2'
+  | 'VEC3'
+  | 'VEC4'
+  | 'MAT2'
+  | 'MAT3'
+  | 'MAT4'
 
 interface ShaderOptions {
   gl: WebGL2RenderingContext
@@ -70,6 +79,7 @@ export default class Shader {
   setUniform(name: string, type: 'MAT2', value: mat2): void
   setUniform(name: string, type: 'MAT3', value: mat3): void
   setUniform(name: string, type: 'MAT4', value: mat4): void
+  setUniform(name: string, type: uType, value: any): void
   setUniform(name: string, type: uType, value: any) {
     let location = this.locations.get(name)
     if (!location) {

@@ -1,10 +1,12 @@
-import loadGLTF from './gltf-loader/index'
 import ArcRotateCamera from './camera/ArcRotateCamera'
 // import UniversalCamera from './camera/UniversalCamera'
 import DesktopInput from './input/DesktopInput'
 import { vec3 } from 'gl-matrix'
-import createParticles from './particle/particle'
+// import loadGLTF from './gltf-loader/index'
+// import createParticles from './particle/particle'
 import axis from './axis/axis'
+import sprite from './sprite'
+import { mat4 } from 'gl-matrix'
 
 const canvas = document.getElementById('main') as HTMLCanvasElement
 canvas.height = window.innerHeight
@@ -26,26 +28,55 @@ const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 2, Math.P
 // const camera = new UniversalCamera(vec3.fromValues(0, 0, 3), vec3.fromValues(0, 0, -1))
 const di = new DesktopInput(canvas)
 
-const { json, scenes, render, animations } = await loadGLTF('/ybot.glb', gl)
+// const { json, scenes, render, animations } = await loadGLTF('/ybot.glb', gl)
+// animations[0].play()
 
-animations[0].play()
+// const snow = await createParticles(gl, {
+//   texture: './particle.png',
+//   scale: 1,
+//   numParticles: 1e4,
+//   particleBirthRate: 500,
+//   originA: [4, 3, -4],
+//   originB: [-4, 3, 4],
+//   angle: [0, -1, 0],
+//   angleRadius: Math.PI / 4,
+//   speedRange: [0.3, 0.6],
+//   gravity: [0, 0, 0],
+//   ageRange: [29, 30]
+// })
 
-const snow = await createParticles(gl, {
-  texture: './particle.png',
-  scale: 1,
-  numParticles: 1e4,
-  particleBirthRate: 500,
-  originA: [4, 3, -4],
-  originB: [-4, 3, 4],
-  angle: [0, -1, 0],
-  angleRadius: Math.PI / 4,
-  speedRange: [0.3, 0.6],
-  gravity: [0, 0, 0],
-  ageRange: [29, 30]
-})
-const projectionMatrix = camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.01, 1000)
 const drawAxis = await axis(gl)
 
+const frameDuration = 100
+const playerSprite = await sprite(gl, {
+  texture: 'sprite/player-compat.png',
+  atlas: 'sprite/player-compat.json',
+  frameDuration
+})
+
+// playerSprite.setAnimation('run')
+const animations = playerSprite.animations
+let i = 0
+const ans = Object.keys(animations)
+const nextAnimation = () => {
+  i = (i + 1) % ans.length
+  console.log(ans[i])
+  playerSprite.setAnimation(ans[i])
+  setTimeout(nextAnimation, animations[ans[i]].length * frameDuration)
+}
+setTimeout(nextAnimation, animations[ans[i]].length * frameDuration)
+
+const modelMatrix = mat4.create()
+mat4.translate(modelMatrix, modelMatrix, [0, 0, -1])
+console.log(modelMatrix)
+
+// const projectionMatrix = camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.01, 1000)
+const projectionMatrix = camera.getOrthographicProjectionMatrix(
+  gl.canvas.width / 2,
+  gl.canvas.height / 2,
+  0.01,
+  1000
+)
 gl.clearColor(0, 0, 0, 0)
 const renderLoop = (time: number) => {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -56,9 +87,11 @@ const renderLoop = (time: number) => {
   }
   camera.processDesktopInput(di)
   drawAxis({ viewMatrix: camera.viewMatrix, projectionMatrix })
-  render(scenes[0], camera, time)
+  // render(scenes[0], camera, time)
 
-  snow({ time, viewMatrix: camera.viewMatrix, projectionMatrix })
+  playerSprite.render({ modelMatrix, viewMatrix: camera.viewMatrix, projectionMatrix, time })
+  // snow({ time, viewMatrix: camera.viewMatrix, projectionMatrix })
+
   requestAnimationFrame(renderLoop)
 }
 requestAnimationFrame(renderLoop)

@@ -8,7 +8,6 @@ import {
 import frameHooks from './frameHooks'
 
 export default (animation: IAnimation) => {
-
   const af = (t: number) => {
     const at = (t - ani.startAt) / 1000
     if (at > animation.duration) {
