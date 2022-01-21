@@ -1,5 +1,5 @@
 import ArcRotateCamera from './camera/ArcRotateCamera'
-// import UniversalCamera from './camera/UniversalCamera'
+import UniversalCamera from './camera/UniversalCamera'
 import DesktopInput from './input/DesktopInput'
 import { vec3 } from 'gl-matrix'
 // import loadGLTF from './gltf-loader/index'
@@ -11,7 +11,11 @@ import { mat4 } from 'gl-matrix'
 const canvas = document.getElementById('main') as HTMLCanvasElement
 canvas.height = window.innerHeight
 canvas.width = window.innerWidth
-const gl = canvas.getContext('webgl2', { premultipliedAlpha: true })
+const gl = canvas.getContext('webgl2', {
+  premultipliedAlpha: true,
+  // preserveDrawingBuffer: true,
+  powerPreference: 'high-performance'
+})
 if (!gl) {
   throw new Error('webgl2 not available')
 }
@@ -47,36 +51,35 @@ const di = new DesktopInput(canvas)
 
 const drawAxis = await axis(gl)
 
-const frameDuration = 100
+const scale = 3
 const playerSprite = await sprite(gl, {
   texture: 'sprite/player-compat.png',
   atlas: 'sprite/player-compat.json',
-  frameDuration
+  scale
 })
 
-// playerSprite.setAnimation('run')
-const animations = playerSprite.animations
-let i = 0
-const ans = Object.keys(animations)
-const nextAnimation = () => {
-  i = (i + 1) % ans.length
-  console.log(ans[i])
-  playerSprite.setAnimation(ans[i])
-  setTimeout(nextAnimation, animations[ans[i]].length * frameDuration)
-}
-setTimeout(nextAnimation, animations[ans[i]].length * frameDuration)
+playerSprite.setAnimation('run')
+// const animations = playerSprite.animations
+// let i = 0
+// const ans = Object.keys(animations)
+// const nextAnimation = () => {
+//   i = (i + 1) % ans.length
+//   // console.log(ans[i], animations[ans[i]])
+//   playerSprite.setAnimation(ans[i])
+//   setTimeout(nextAnimation, animations[ans[i]].duration)
+// }
+// setTimeout(nextAnimation, animations[ans[i]].duration)
 
 const modelMatrix = mat4.create()
-mat4.translate(modelMatrix, modelMatrix, [0, 0, -1])
+mat4.translate(modelMatrix, modelMatrix, [0, scale * 42, 0])
 console.log(modelMatrix)
 
-// const projectionMatrix = camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.01, 1000)
-const projectionMatrix = camera.getOrthographicProjectionMatrix(
-  gl.canvas.width / 2,
-  gl.canvas.height / 2,
-  0.01,
-  1000
-)
+const getProjection = () => {
+  // return camera.getProjectionMatrix(gl.canvas.width / gl.canvas.height, 0.001, 1000)
+  return camera.getOrthographicProjectionMatrix(gl.canvas.width, gl.canvas.height, 0.01, 1000)
+}
+
+let projectionMatrix = getProjection()
 gl.clearColor(0, 0, 0, 0)
 const renderLoop = (time: number) => {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -84,6 +87,7 @@ const renderLoop = (time: number) => {
     canvas.height = window.innerHeight
     canvas.width = window.innerWidth
     gl.viewport(0, 0, canvas.width, canvas.height)
+    projectionMatrix = getProjection()
   }
   camera.processDesktopInput(di)
   drawAxis({ viewMatrix: camera.viewMatrix, projectionMatrix })

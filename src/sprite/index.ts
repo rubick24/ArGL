@@ -1,23 +1,23 @@
+import { mat4 } from 'gl-matrix'
+import { SpriteAtlasJson } from './atlas'
 import Shader from '../shader'
-import { mat4, vec3 } from 'gl-matrix'
 import vs from './sprite.vert'
 import fs from './sprite.frag'
 
 export default async (
   gl: WebGL2RenderingContext,
-  option: {
+  options: {
     texture: string
     atlas: string
-    frameDuration?: number
+    scale: number
   }
 ) => {
-  if (!option.frameDuration) {
-    option.frameDuration = 100
+  if (!options.scale) {
+    options.scale = 1
   }
-
   const shader = new Shader({ gl, vs, fs })
   shader.use()
-  const quad = [-1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0]
+  const quad = [-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5]
   const vao = gl.createVertexArray()
   const vbo = gl.createBuffer()
   gl.bindVertexArray(vao)
@@ -31,48 +31,45 @@ export default async (
   const [texture, atlas] = await Promise.all([
     (async () => {
       const img = new Image()
-      img.src = option.texture
+      img.src = options.texture
       await new Promise(r => (img.onload = r))
       const texture = gl.createTexture()
       gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, texture)
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, WebGL2RenderingContext.REPEAT)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, WebGL2RenderingContext.REPEAT)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, WebGL2RenderingContext.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, WebGL2RenderingContext.CLAMP_TO_EDGE)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, WebGL2RenderingContext.NEAREST)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, WebGL2RenderingContext.NEAREST)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
       return texture
     })(),
-    fetch(option.atlas).then(r => r.json())
+    fetch(options.atlas).then(r => r.json()) as Promise<SpriteAtlasJson>
   ])
   console.log(atlas, texture)
-  const spriteSize = [atlas.meta.size.w, atlas.meta.size.h]
-  const animations: {
-    [k: string]: { start: number; length: number }
-  } = {}
+  const spriteSize = atlas.meta.size
 
-  for (const tag of atlas.meta.frameTags) {
-    animations[tag.name] = { start: tag.from, length: tag.to - tag.from + 1 }
+  const getDuration = (from: number, to: number) => {
+    let r = 0
+    for (let i = from; i <= to; i++) {
+      r += atlas.frames[i].duration
+    }
+    return r
   }
-
-  const frameDuration = 100
+  const animations: Record<string, { start: number; length: number; duration: number }> = {}
+  for (const tag of atlas.meta.frameTags) {
+    animations[tag.name] = {
+      start: tag.from,
+      length: tag.to - tag.from + 1,
+      duration: getDuration(tag.from, tag.to)
+    }
+  }
 
   let currentAnimation = atlas.meta.frameTags[0].name
   let currentFrame = 0
   let last = performance.now()
 
   const mvp = mat4.create()
-  const position = [atlas.frames[0].frame.x, atlas.frames[0].frame.y]
-  const size = vec3.fromValues(atlas.frames[0].frame.w, atlas.frames[0].frame.h, 1)
-  const maxSize = [0, 0]
-  for (const frame of atlas.frames) {
-    if (frame.frame.w > maxSize[0]) {
-      maxSize[0] = frame.frame.w
-    }
-    if (frame.frame.h > maxSize[1]) {
-      maxSize[1] = frame.frame.h
-    }
-  }
+  let currentFrameObject = atlas.frames[currentFrame]
 
   const render = ({
     modelMatrix,
@@ -90,26 +87,36 @@ export default async (
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, texture)
     const animation = animations[currentAnimation]
-    if (time > last + frameDuration) {
+
+    if (time > last + currentFrameObject.duration) {
       last = time
       currentFrame = (currentFrame + 1) % animation.length
-      const frame = atlas.frames[animation.start + currentFrame]
-      position[0] = frame.frame.x
-      position[1] = frame.frame.y
-      size[0] = frame.frame.w
-      size[1] = frame.frame.h
+      currentFrameObject = atlas.frames[animation.start + currentFrame]
+
+      const { frame, sourceSize, spriteSourceSize } = currentFrameObject
+
+      shader.setUniform('sprite_box', 'VEC4', [
+        spriteSourceSize.x / sourceSize.w,
+        spriteSourceSize.y / sourceSize.h,
+        spriteSourceSize.w / sourceSize.w,
+        spriteSourceSize.h / sourceSize.h
+      ])
+      shader.setUniform('sprite_position', 'VEC4', [
+        (frame.x + 2) / spriteSize.w,
+        (frame.y + 2) / spriteSize.h,
+        (frame.w - 4) / spriteSize.w,
+        (frame.h - 4) / spriteSize.h
+      ])
     }
 
-    mat4.scale(mvp, modelMatrix, size)
+    mat4.scale(mvp, modelMatrix, [
+      currentFrameObject.sourceSize.w * options.scale,
+      currentFrameObject.sourceSize.h * options.scale,
+      1
+    ])
     mat4.mul(mvp, viewMatrix, mvp)
     mat4.mul(mvp, projectionMatrix, mvp)
     shader.setUniform('mvp_matrix', 'MAT4', mvp)
-    shader.setUniform('sprite_position', 'VEC4', [
-      position[0] / spriteSize[0],
-      position[1] / spriteSize[1],
-      size[0] / spriteSize[0],
-      size[1] / spriteSize[1]
-    ])
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
