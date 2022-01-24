@@ -3,7 +3,7 @@ import ArcRotateCamera from '../camera/ArcRotateCamera'
 import { DesktopInput } from '../input/DesktopInput'
 
 import { vec3, mat4 } from 'gl-matrix'
-import { animated_sprite } from '../animated_sprite'
+import { animated_sprite } from '../sprite_animation'
 import axis from '../axis/axis'
 import { createBackground } from './bg'
 
@@ -24,7 +24,7 @@ export const createScene = async (gl: WebGL2RenderingContext) => {
 
   playerSprite.setAnimation('run')
 
-  const modelMatrix = mat4.create()
+  // const modelMatrix = mat4.create()
 
   const canvas = gl.canvas
   const getProjection = () => {
@@ -32,7 +32,6 @@ export const createScene = async (gl: WebGL2RenderingContext) => {
     return camera.getOrthographicProjectionMatrix(canvas.width, canvas.height, 0.01, 1000)
   }
   let projectionMatrix = getProjection()
-  mat4.translate(modelMatrix, modelMatrix, [0, scale * 42, 0])
 
   const temp = mat4.create()
   const viewProjection = mat4.create()
@@ -49,9 +48,7 @@ export const createScene = async (gl: WebGL2RenderingContext) => {
 
     drawAxis({ viewProjection })
     if (world) {
-      mat4.mul(temp, world, modelMatrix)
-    } else {
-      mat4.copy(temp, modelMatrix)
+      mat4.copy(temp, world)
     }
 
     // camera.processDesktopInput(di)
