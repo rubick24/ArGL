@@ -8,20 +8,24 @@ export interface IMouseInput {
   lastWheel: number
 }
 
-export default class DesktopInput {
-  public lockPointer: boolean = false
+export class DesktopInput {
   public currentlyPressedKeys: Map<string, boolean>
   public mouseInput: IMouseInput
   private raf = 0
   private t = performance.now()
 
-  constructor(public el: HTMLElement, options?: { lockPointer?: boolean }) {
-    if (options) {
-      if (options.lockPointer !== undefined) {
-        this.lockPointer = options.lockPointer
-      }
-    }
+  static instances: DesktopInput[] = []
 
+  static getInstance(el: HTMLElement) {
+    let t = this.instances.find(v => v.el === el)
+    if (!t) {
+      t = new DesktopInput(el)
+      this.instances.push(t)
+    }
+    return t
+  }
+
+  constructor(public el: HTMLElement) {
     this.currentlyPressedKeys = new Map()
     this.mouseInput = {
       x: 0,
@@ -82,27 +86,9 @@ export default class DesktopInput {
       cancelAnimationFrame(this.raf)
     }
 
-    if (this.lockPointer) {
-      // @ts-ignore
-      el.requestPointerLock = el.requestPointerLock || el.mozRequestPointerLock
-      // @ts-ignore
-      el.exitPointerLock = el.exitPointerLock || el.mozExitPointerLock
-      el.addEventListener('click', el.requestPointerLock)
-      const handleLockChange = () => {
-        // @ts-ignore
-        if (document.pointerLockElement === el || document.mozPointerLockElement === el) {
-          addInputListener()
-        } else {
-          removeInputListener()
-        }
-      }
-      document.addEventListener('pointerlockchange', handleLockChange, false)
-      document.addEventListener('mozpointerlockchange', handleLockChange, false)
-    } else {
-      el.contentEditable = 'true'
-      el.style.cursor = 'default'
-      el.style.outline = 'none'
-      addInputListener()
-    }
+    el.contentEditable = 'true'
+    el.style.cursor = 'default'
+    el.style.outline = 'none'
+    addInputListener()
   }
 }

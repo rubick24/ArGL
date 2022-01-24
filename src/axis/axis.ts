@@ -5,12 +5,8 @@ import fsSource from './axis.frag'
 
 export default async (gl: WebGL2RenderingContext) => {
   const lines = new Float32Array([
-    0, 0, 0, 1, 0, 0,
-    1, 0, 0, 1, 0, 0,
-    0, 0, 0, 0, 1, 0,
-    0, 1, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 1,
-    0, 0, 1, 0, 0, 1
+    0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+    1, 0, 0, 1
   ])
   const vao = gl.createVertexArray()
   const vbo = gl.createBuffer()
@@ -29,19 +25,11 @@ export default async (gl: WebGL2RenderingContext) => {
     fs: fsSource
   })
 
-  const mvp = mat4.create()
-
-  const renderLoop = ({
-    viewMatrix,
-    projectionMatrix
-  }: {
-    viewMatrix: mat4
-    projectionMatrix: mat4
-  }) => {
+  // const mvp = mat4.create()
+  const renderLoop = ({ viewProjection }: { viewProjection: mat4 }) => {
     gl.bindVertexArray(vao)
     shader.use()
-    mat4.mul(mvp, projectionMatrix, viewMatrix)
-    shader.setUniform('u_MVPMatrix', 'MAT4', mvp)
+    shader.setUniform('u_MVPMatrix', 'MAT4', viewProjection)
     gl.drawArrays(gl.LINES, 0, 6)
   }
   return renderLoop

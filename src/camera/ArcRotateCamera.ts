@@ -1,5 +1,5 @@
 import { vec3, mat4 } from 'gl-matrix'
-import DesktopInput from '../input/DesktopInput'
+import { DesktopInput } from '../input/DesktopInput'
 import TouchInput from '../input/TouchInput'
 
 const up = vec3.fromValues(0, 1, 0)
