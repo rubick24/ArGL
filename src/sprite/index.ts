@@ -7,7 +7,9 @@ export const sprite = async (
   gl: WebGL2RenderingContext,
   options: {
     texture: string
-    scale: number
+    position?: [number, number, number]
+    scale?: [number, number]
+    repeat?: [number, number]
   }
 ) => {
   const shader = new Shader({ gl, vs, fs })
@@ -38,24 +40,32 @@ export const sprite = async (
     return [img, texture]
   })()
 
+  const model = mat4.create()
   const mvp = mat4.create()
 
-  const render = ({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) => {
-    gl.bindVertexArray(vao)
-    shader.use()
-    gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-    mat4.scale(mvp, modelMatrix, [
-      img.naturalWidth * options.scale,
-      img.naturalHeight * options.scale,
-      1
-    ])
-    mat4.mul(mvp, viewProjection, mvp)
-    shader.setUniform('mvp_matrix', 'MAT4', mvp)
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-  }
-
   return {
-    render
+    scale: options.scale || [1, 1],
+    repeat: options.repeat || [1, 1],
+    position: options.position || [0, 0, 0],
+    uvOffset: [0, 0],
+    size: [img.naturalWidth, img.naturalHeight],
+    render({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) {
+      gl.bindVertexArray(vao)
+      shader.use()
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, texture)
+
+      mat4.fromTranslation(model, this.position)
+      mat4.scale(model, model, [
+        this.size[0] * this.scale[0] * this.repeat[0],
+        this.size[1] * this.scale[1] * this.repeat[1],
+        1
+      ])
+      mat4.mul(mvp, viewProjection, model)
+      shader.setUniform('mvp_matrix', 'MAT4', mvp)
+      shader.setUniform('uv_offset', 'VEC2', this.uvOffset)
+      shader.setUniform('repeat', 'VEC2', this.repeat)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    }
   }
 }
