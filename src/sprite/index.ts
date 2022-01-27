@@ -40,7 +40,7 @@ export const sprite = async (
     return [img, texture]
   })()
 
-  const model = mat4.create()
+  // const model = mat4.create()
   const mvp = mat4.create()
 
   return {
@@ -55,13 +55,14 @@ export const sprite = async (
       gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, texture)
 
-      mat4.fromTranslation(model, this.position)
-      mat4.scale(model, model, [
+      // mat4.fromTranslation(model, this.position)
+      mat4.translate(mvp, modelMatrix, this.position)
+      mat4.scale(mvp, mvp, [
         this.size[0] * this.scale[0] * this.repeat[0],
         this.size[1] * this.scale[1] * this.repeat[1],
         1
       ])
-      mat4.mul(mvp, viewProjection, model)
+      mat4.mul(mvp, viewProjection, mvp)
       shader.setUniform('mvp_matrix', 'MAT4', mvp)
       shader.setUniform('uv_offset', 'VEC2', this.uvOffset)
       shader.setUniform('repeat', 'VEC2', this.repeat)

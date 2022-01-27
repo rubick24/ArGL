@@ -9,12 +9,10 @@ export const animated_sprite = async (
   options: {
     texture: string
     atlas: string
-    scale: number
+    position?: [number, number, number]
+    scale?: [number, number]
   }
 ) => {
-  if (!options.scale) {
-    options.scale = 1
-  }
   const shader = new Shader({ gl, vs, fs })
   shader.use()
   const quad = [-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5]
@@ -64,65 +62,70 @@ export const animated_sprite = async (
     }
   }
 
-  let currentAnimation = atlas.meta.frameTags[0].name
   let currentFrame = 0
   let last = performance.now()
 
   const mvp = mat4.create()
   let currentFrameObject = atlas.frames[currentFrame]
 
-  const render = ({
-    modelMatrix,
-    viewProjection,
-    time
-  }: {
-    modelMatrix: mat4
-    viewProjection: mat4
-    time: number
-  }) => {
-    gl.bindVertexArray(vao)
-    shader.use()
-    gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-    const animation = animations[currentAnimation]
-
-    if (time > last + currentFrameObject.duration) {
-      last = time
-      currentFrame = (currentFrame + 1) % animation.length
-      currentFrameObject = atlas.frames[animation.start + currentFrame]
-
-      const { frame, sourceSize, spriteSourceSize } = currentFrameObject
-
-      shader.setUniform('sprite_box', 'VEC4', [
-        spriteSourceSize.x / sourceSize.w,
-        spriteSourceSize.y / sourceSize.h,
-        spriteSourceSize.w / sourceSize.w,
-        spriteSourceSize.h / sourceSize.h
-      ])
-      shader.setUniform('sprite_position', 'VEC4', [
-        (frame.x + 2) / spriteSize.w,
-        (frame.y + 2) / spriteSize.h,
-        (frame.w - 4) / spriteSize.w,
-        (frame.h - 4) / spriteSize.h
-      ])
-    }
-
-    mat4.scale(mvp, modelMatrix, [
-      currentFrameObject.sourceSize.w * options.scale,
-      currentFrameObject.sourceSize.h * options.scale,
-      1
-    ])
-    mat4.mul(mvp, viewProjection, mvp)
-    shader.setUniform('mvp_matrix', 'MAT4', mvp)
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-  }
-
   return {
+    scale: options.scale || [1, 1],
+    position: options.position || [0, 0, 0],
     animations,
-    setAnimation: (name: string) => {
-      currentAnimation = name
+    currentAnimation: atlas.meta.frameTags[0].name,
+    sourceSize: currentFrameObject.sourceSize,
+    spriteSourceSize: currentFrameObject.spriteSourceSize,
+    setAnimation(name: string) {
+      this.currentAnimation = name
       currentFrame = 0
     },
-    render
+    render({
+      modelMatrix,
+      viewProjection,
+      time
+    }: {
+      modelMatrix: mat4
+      viewProjection: mat4
+      time: number
+    }) {
+      gl.bindVertexArray(vao)
+      shader.use()
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, texture)
+      const animation = animations[this.currentAnimation]
+
+      if (time > last + currentFrameObject.duration) {
+        last = time
+        currentFrame = (currentFrame + 1) % animation.length
+        currentFrameObject = atlas.frames[animation.start + currentFrame]
+
+        const { frame, sourceSize, spriteSourceSize } = currentFrameObject
+
+        shader.setUniform('sprite_box', 'VEC4', [
+          spriteSourceSize.x / sourceSize.w,
+          spriteSourceSize.y / sourceSize.h,
+          spriteSourceSize.w / sourceSize.w,
+          spriteSourceSize.h / sourceSize.h
+        ])
+        shader.setUniform('sprite_position', 'VEC4', [
+          (frame.x + 2) / spriteSize.w,
+          (frame.y + 2) / spriteSize.h,
+          (frame.w - 4) / spriteSize.w,
+          (frame.h - 4) / spriteSize.h
+        ])
+        this.sourceSize = sourceSize
+        this.spriteSourceSize = spriteSourceSize
+      }
+      mat4.translate(mvp, modelMatrix, this.position)
+      mat4.scale(mvp, mvp, [
+        currentFrameObject.sourceSize.w * Math.abs(this.scale[0]),
+        currentFrameObject.sourceSize.h * Math.abs(this.scale[1]),
+        1
+      ])
+      mat4.mul(mvp, viewProjection, mvp)
+      shader.setUniform('mvp_matrix', 'MAT4', mvp)
+      shader.setUniform('flip', 'VEC2', [+(this.scale[0] < 0), +(this.scale[1] < 0)])
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    }
   }
 }
