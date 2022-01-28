@@ -2,16 +2,15 @@ import vs from './sprite.vert'
 import fs from './sprite.frag'
 import Shader from '../shader'
 import { mat4 } from 'gl-matrix'
+import { refs } from '../refs'
 
-export const sprite = async (
-  gl: WebGL2RenderingContext,
-  options: {
-    texture: string
-    position?: [number, number, number]
-    scale?: [number, number]
-    repeat?: [number, number]
-  }
-) => {
+export const sprite = async (options: {
+  texture: string
+  position?: [number, number, number]
+  scale?: [number, number]
+  repeat?: [number, number]
+}) => {
+  const gl = refs.gl!
   const shader = new Shader({ gl, vs, fs })
   shader.use()
   const quad = [-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5]

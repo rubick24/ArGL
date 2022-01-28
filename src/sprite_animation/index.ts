@@ -3,16 +3,15 @@ import { SpriteAtlasJson } from './atlas'
 import Shader from '../shader'
 import vs from './sprite.vert'
 import fs from './sprite.frag'
+import { refs } from '../refs'
 
-export const animated_sprite = async (
-  gl: WebGL2RenderingContext,
-  options: {
-    texture: string
-    atlas: string
-    position?: [number, number, number]
-    scale?: [number, number]
-  }
-) => {
+export const animated_sprite = async (options: {
+  texture: string
+  atlas: string
+  position?: [number, number, number]
+  scale?: [number, number]
+}) => {
+  const gl = refs.gl!
   const shader = new Shader({ gl, vs, fs })
   shader.use()
   const quad = [-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5]
@@ -43,7 +42,7 @@ export const animated_sprite = async (
     })(),
     fetch(options.atlas).then(r => r.json()) as Promise<SpriteAtlasJson>
   ])
-  console.log(atlas, texture)
+  console.log(options.atlas, atlas)
   const spriteSize = atlas.meta.size
 
   const getDuration = (from: number, to: number) => {
@@ -63,10 +62,27 @@ export const animated_sprite = async (
   }
 
   let currentFrame = 0
-  let last = performance.now()
+  let lastChange = performance.now()
 
   const mvp = mat4.create()
   let currentFrameObject = atlas.frames[currentFrame]
+  let currentLoop = 0
+  let loop = Infinity
+
+  // switch animation immediately
+  let switchAnimation: {
+    name: string
+    loop: number
+  } | null = {
+    name: '',
+    loop: Infinity
+  }
+
+  // switch animation after current animation is finished
+  const animationQueue: {
+    name: string
+    loop: number
+  }[] = []
 
   return {
     scale: options.scale || [1, 1],
@@ -75,32 +91,54 @@ export const animated_sprite = async (
     currentAnimation: atlas.meta.frameTags[0].name,
     sourceSize: currentFrameObject.sourceSize,
     spriteSourceSize: currentFrameObject.spriteSourceSize,
-    setAnimation(name: string) {
-      this.currentAnimation = name
-      currentFrame = 0
+    setAnimation(name: string, loop = Infinity) {
+      switchAnimation = {
+        name,
+        loop
+      }
     },
-    render({
-      modelMatrix,
-      viewProjection,
-      time
-    }: {
-      modelMatrix: mat4
-      viewProjection: mat4
-      time: number
-    }) {
+    pushAnimation(name: string, loop = Infinity) {
+      animationQueue.push({ name, loop })
+    },
+    render({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) {
       gl.bindVertexArray(vao)
       shader.use()
       gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, texture)
-      const animation = animations[this.currentAnimation]
 
-      if (time > last + currentFrameObject.duration) {
-        last = time
-        currentFrame = (currentFrame + 1) % animation.length
-        currentFrameObject = atlas.frames[animation.start + currentFrame]
-
+      if (refs.time > lastChange + currentFrameObject.duration || switchAnimation) {
+        if (switchAnimation) {
+          this.currentAnimation = switchAnimation.name
+          loop = switchAnimation.loop
+          switchAnimation = null
+          currentFrame = 0
+          currentLoop = 0
+          const animation = animations[this.currentAnimation]
+          currentFrameObject = atlas.frames[animation.start]
+        } else {
+          const animation = animations[this.currentAnimation]
+          if (currentFrame + 1 === animation.length) {
+            currentLoop += 1
+          }
+          if (currentLoop >= loop) {
+            const next = animationQueue.shift()
+            if (next) {
+              this.currentAnimation = next.name
+              loop = next.loop
+              currentFrame = 0
+              currentLoop = 0
+              const animation = animations[this.currentAnimation]
+              currentFrameObject = atlas.frames[animation.start]
+            }
+          } else {
+            currentFrame = (currentFrame + 1) % animation.length
+            currentFrameObject = atlas.frames[animation.start + currentFrame]
+          }
+        }
+        // debug sprite animation frame
+        // console.log(currentFrameObject.filename, refs.time - lastChange)
         const { frame, sourceSize, spriteSourceSize } = currentFrameObject
-
+        shader.use()
         shader.setUniform('sprite_box', 'VEC4', [
           spriteSourceSize.x / sourceSize.w,
           spriteSourceSize.y / sourceSize.h,
@@ -115,6 +153,7 @@ export const animated_sprite = async (
         ])
         this.sourceSize = sourceSize
         this.spriteSourceSize = spriteSourceSize
+        lastChange = refs.time
       }
       mat4.translate(mvp, modelMatrix, this.position)
       mat4.scale(mvp, mvp, [

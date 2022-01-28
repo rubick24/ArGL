@@ -2,14 +2,15 @@ import { mat4 } from 'gl-matrix'
 import Shader from '../shader'
 import vs from './border.vert'
 import fs from './border.frag'
+import { refs } from '../refs'
 
 export const createBorder = async (
-  gl: WebGL2RenderingContext,
   options: {
     position: [number, number, number]
     size: [number, number]
   }
 ) => {
+  const gl = refs.gl!
   const shader = new Shader({ gl, vs, fs })
   shader.use()
   const quad = [-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5]
