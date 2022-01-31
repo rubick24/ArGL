@@ -4,7 +4,7 @@ import Shader from '../shader'
 import { mat4 } from 'gl-matrix'
 import { refs } from '../refs'
 
-export const sprite = async (options: {
+export const createSprite = async (options: {
   texture: string
   position?: [number, number, number]
   scale?: [number, number]

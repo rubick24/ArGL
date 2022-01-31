@@ -5,7 +5,7 @@ import vs from './sprite.vert'
 import fs from './sprite.frag'
 import { refs } from '../refs'
 
-export const animated_sprite = async (options: {
+export const createAnimatedSprite = async (options: {
   texture: string
   atlas: string
   position?: [number, number, number]

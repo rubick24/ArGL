@@ -6,5 +6,6 @@ out vec4 fragColor;
 
 void main() {
     vec2 uv = position + 0.5;
-    fragColor = vec4(uv, 0., 1.);
+    float r =  clamp(pow(length(position * 2.), 10.), 0., 1.);
+    fragColor = vec4(vec3(1. - r), r);
 }

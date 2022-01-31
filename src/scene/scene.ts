@@ -3,14 +3,13 @@ import UniversalCamera from '../camera/UniversalCamera'
 import { DesktopInput } from '../input/DesktopInput'
 
 import { vec3, mat4 } from 'gl-matrix'
-import { Engine, Composite, Bodies, Body, Events } from 'matter-js'
+import { Engine } from 'matter-js'
 
-// import { animated_sprite } from '../sprite_animation'
 import axis from '../axis/axis'
-import { createBorder } from '../border'
 import { createBackground } from './bg'
 import { refs } from '../refs'
 import { createPlayer } from './player'
+import { createGround } from './ground'
 
 export const createScene = async () => {
   const gl = refs.gl!
@@ -26,13 +25,7 @@ export const createScene = async () => {
   const drawAxis = await axis()
   const bg = await createBackground()
   const player = await createPlayer()
-  const ground = Bodies.rectangle(0, -50, 800, 100, { isStatic: true })
-  const groundBorder = await createBorder({
-    position: [0, -50, -6],
-    size: [800, 100]
-  })
-
-  Composite.add(engine.world, [ground, player.body])
+  const ground = await createGround()
 
   const getProjection = () => {
     // return camera.getProjectionMatrix(canvas.width / canvas.height, 0.001, 1e10)
@@ -40,7 +33,7 @@ export const createScene = async () => {
   }
   let projectionMatrix = getProjection()
 
-  const model = mat4.create()
+  const modelMatrix = mat4.create()
   const viewProjection = mat4.create()
 
   const render = () => {
@@ -58,11 +51,11 @@ export const createScene = async () => {
     // camera.processDesktopInput(di)
 
     bg.render({
-      modelMatrix: model,
+      modelMatrix,
       viewProjection
     })
-    groundBorder.render({ modelMatrix: model, viewProjection })
-    player.render({ modelMatrix: model, viewProjection })
+    ground.render({ modelMatrix, viewProjection })
+    player.render({ modelMatrix, viewProjection })
   }
   return {
     camera,
