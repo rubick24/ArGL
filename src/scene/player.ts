@@ -76,6 +76,10 @@ export const createPlayer = async () => {
       }
       sprite.position = [body.position.x, body.position.y + 45, sprite.position[2]]
 
+      if (state.grounded) {
+        Body.translate(body, { x: -1, y: 0 })
+      }
+
       // control
       const force = state.grounded ? 0.1 : 0.05
       const keyLeft = refs.di!.currentlyPressedKeys.get('ArrowLeft')
