@@ -3,7 +3,7 @@ import UniversalCamera from '../camera/UniversalCamera'
 import { DesktopInput } from '../input/DesktopInput'
 
 import { vec3, mat4 } from 'gl-matrix'
-import { Engine } from 'matter-js'
+import { Engine, Query } from 'matter-js'
 
 import axis from '../axis/axis'
 import { createBackground } from './bg'
@@ -42,6 +42,21 @@ export const createScene = async () => {
       canvas.width = window.innerWidth
       gl.viewport(0, 0, canvas.width, canvas.height)
       projectionMatrix = getProjection()
+    }
+
+    const collision = Query.ray(
+      ground.bodies,
+      player.position,
+      {
+        x: player.position.x,
+        y: player.position.y - player.size.y / 2 - 5
+      },
+      player.size.x - 5
+    )
+    if (collision.length > 0 && !player.grounded) {
+      player.grounded = true
+    } else if (collision.length === 0 && player.grounded) {
+      player.grounded = false
     }
 
     Engine.update(engine, refs.deltaT)

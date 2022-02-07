@@ -1,7 +1,7 @@
 import { createAnimatedSprite } from '../sprite_animation'
 import { createBorder } from '../border'
 import { mat4 } from 'gl-matrix'
-import { Bodies, Body, Events, Composite } from 'matter-js'
+import { Bodies, Body, Events, Composite, Query } from 'matter-js'
 import { refs } from '../refs'
 
 export const createPlayer = async () => {
@@ -11,113 +11,132 @@ export const createPlayer = async () => {
     scale: [2, 2]
   })
 
-  const bodyX = -200
-  const bodyY = 200
-  const bodyWidth = 40
-  const bodyHeight = 78
+  const position = { x: -200, y: 200 }
+  const size = { x: 40, y: 78 }
 
-  const body = Bodies.rectangle(bodyX, bodyY, bodyWidth, bodyHeight, { inertia: Infinity })
+  const body = Bodies.rectangle(position.x, position.y, size.x, size.y, { inertia: Infinity })
   Body.setMass(body, 10)
   Body.setVelocity(body, { x: 0, y: 0 })
 
-  const state = {
-    grounded: false
-  }
+  let grounded = false
   Composite.add(refs.engine.world, body)
 
   window.addEventListener('keydown', e => {
     const m: Record<string, () => void> = {
       ' ': () => {
-        if (state.grounded) {
-          Body.applyForce(body, body.position, { x: 0, y: 0.25 })
+        if (grounded) {
+          Body.applyForce(body, body.position, { x: 0, y: 0.4 })
         }
       }
     }
     m[e.key]?.()
   })
 
-  Events.on(refs.engine, 'collisionStart', e => {
-    console.log(e.pairs.length, e.pairs[0])
-    sprite.setAnimation('land', 1)
-    sprite.pushAnimation('idle')
-    state.grounded = true
-  })
-  Events.on(refs.engine, 'collisionEnd', () => {
-    sprite.setAnimation('jump_rise')
-    state.grounded = false
-  })
-
   sprite.setAnimation('idle')
 
   const border = refs.debug
     ? await createBorder({
-        position: [bodyX, bodyY, -6],
-        size: [bodyWidth, bodyHeight]
+        position: [position.x, position.y, -6],
+        size: [size.x, size.y]
       })
     : null
 
-  return {
-    setPosition(position: [number, number]) {
-      body.position.x = position[0]
-      body.position.y = position[1]
-      sprite.position = [position[0], position[1] + 45, 0]
-      if (refs.debug) {
-        border!.position = [position[0], position[1], border!.position[2]]
+  const render = ({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) => {
+    // Body.translate(body, { x: -3, y: 0 })
+
+    // control
+    // const force = state.grounded ? 0.1 : 0.01
+    const vel = grounded ? 4 : 3
+    const keyLeft = refs.di!.currentlyPressedKeys.get('ArrowLeft')
+    const keyRight = refs.di!.currentlyPressedKeys.get('ArrowRight')
+    if (!keyLeft && keyRight) {
+      sprite.scale[0] = 2
+      if (body.velocity.x < 3) {
+        Body.setVelocity(body, { x: vel, y: body.velocity.y })
+        // Body.applyForce(body, body.position, { x: force, y: 0 })
       }
-    },
+    } else if (keyLeft && !keyRight) {
+      sprite.scale[0] = -2
+      if (body.velocity.x > -3) {
+        Body.setVelocity(body, { x: -vel, y: body.velocity.y })
+        // Body.applyForce(body, body.position, { x: -force, y: 0 })
+      }
+    }
+
+    if (grounded) {
+      if (sprite.currentAnimation !== 'run' && (keyLeft || keyRight)) {
+        sprite.setAnimation('run')
+      } else if (sprite.currentAnimation !== 'idle' && !(keyLeft || keyRight)) {
+        sprite.setAnimation('idle')
+      }
+    } else {
+      if (sprite.currentAnimation === 'jump_rise' && body.velocity.y < 1) {
+        sprite.setAnimation('jump_mid')
+      } else if (sprite.currentAnimation === 'jump_mid' && body.velocity.y < -1) {
+        sprite.setAnimation('jump_fall')
+      }
+    }
+
+    // sync position
+    if (refs.debug) {
+      border!.position = [body.position.x, body.position.y, border!.position[2]]
+    }
+    sprite.position = [body.position.x, body.position.y + 45, sprite.position[2]]
+
+    // render
+    // if (refs.debug) {
+    //   border!.render({ modelMatrix, viewProjection })
+    // }
+    sprite.render({
+      modelMatrix,
+      viewProjection
+    })
+  }
+
+  const r = {
+    grounded,
+    position,
+    size,
+
     sprite,
     body,
-    border,
-    state,
-    render({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) {
-      // sync position
-      if (refs.debug) {
-        border!.position = [body.position.x, body.position.y, border!.position[2]]
-      }
-      sprite.position = [body.position.x, body.position.y + 45, sprite.position[2]]
-
-      if (state.grounded) {
-        Body.translate(body, { x: -1, y: 0 })
-      }
-
-      // control
-      const force = state.grounded ? 0.1 : 0.05
-      const keyLeft = refs.di!.currentlyPressedKeys.get('ArrowLeft')
-      const keyRight = refs.di!.currentlyPressedKeys.get('ArrowRight')
-      if (!keyLeft && keyRight) {
-        sprite.scale[0] = 2
-        if (body.velocity.x < 3) {
-          Body.applyForce(body, body.position, { x: force, y: 0 })
-        }
-      } else if (keyLeft && !keyRight) {
-        sprite.scale[0] = -2
-        if (body.velocity.x > -3) {
-          Body.applyForce(body, body.position, { x: -force, y: 0 })
-        }
-      }
-
-      if (state.grounded) {
-        if (sprite.currentAnimation !== 'run' && (keyLeft || keyRight)) {
-          sprite.setAnimation('run')
-        } else if (sprite.currentAnimation !== 'idle' && !(keyLeft || keyRight)) {
-          sprite.setAnimation('idle')
-        }
-      } else {
-        if (sprite.currentAnimation === 'jump_rise' && body.velocity.y < 1) {
-          sprite.setAnimation('jump_mid')
-        } else if (sprite.currentAnimation === 'jump_mid' && body.velocity.y < -1) {
-          sprite.setAnimation('jump_fall')
-        }
-      }
-
-      // render
-      if (refs.debug) {
-        border!.render({ modelMatrix, viewProjection })
-      }
-      sprite.render({
-        modelMatrix,
-        viewProjection
-      })
-    }
+    render
   }
+
+  Object.defineProperties(r, {
+    position: {
+      get() {
+        return body.position
+      },
+      set(v: { x: number; y: number }) {
+        body.position = v
+        sprite.position = [v.x, v.y + 45, 0]
+        if (refs.debug) {
+          border!.position = [v.x, v.y, border!.position[2]]
+        }
+      }
+    },
+    size: {
+      get() {
+        return size
+      }
+    },
+    grounded: {
+      get() {
+        return grounded
+      },
+      set(v) {
+        if (v) {
+          sprite.setAnimation('land', 1)
+          sprite.pushAnimation('idle')
+          grounded = true
+        } else {
+          sprite.setAnimation('jump_rise')
+          grounded = false
+        }
+      }
+    }
+  })
+
+  return r
 }

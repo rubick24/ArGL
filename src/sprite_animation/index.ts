@@ -23,7 +23,6 @@ export const createAnimatedSprite = async (options: {
   gl.enableVertexAttribArray(0)
   gl.vertexAttribPointer(0, 2, gl.FLOAT, true, 8, 0)
   gl.bindBuffer(gl.ARRAY_BUFFER, null)
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
 
   const [texture, atlas] = await Promise.all([
     (async () => {
@@ -157,13 +156,12 @@ export const createAnimatedSprite = async (options: {
       }
       mat4.translate(mvp, modelMatrix, this.position)
       mat4.scale(mvp, mvp, [
-        currentFrameObject.sourceSize.w * Math.abs(this.scale[0]),
-        currentFrameObject.sourceSize.h * Math.abs(this.scale[1]),
+        currentFrameObject.sourceSize.w * this.scale[0],
+        currentFrameObject.sourceSize.h * this.scale[1],
         1
       ])
       mat4.mul(mvp, viewProjection, mvp)
       shader.setUniform('mvp_matrix', 'MAT4', mvp)
-      shader.setUniform('flip', 'VEC2', [+(this.scale[0] < 0), +(this.scale[1] < 0)])
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
   }

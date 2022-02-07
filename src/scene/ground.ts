@@ -17,39 +17,47 @@ export const createGround = async () => {
   // Composite.add(refs.engine.world, body)
 
   const blockLength = 5
-  const blocks = await Promise.all(
-    new Array(5).fill(0).map(async (_, i) => {
-      const x = i * blockLength * 80 - 100
-      const y = -50
-      const width = blockLength * 50
-      const height = 100
-      const body = Bodies.rectangle(x, y, width, height, { isStatic: true, friction: 0.5 })
+  const blocks = new Array(5).fill(0).map((_, i) => {
+    const x = i * blockLength * 80 - 200
+    const y = -150 + Math.random() * 150
+    const width = blockLength * 50
+    const height = 100
+    return { x, y, width, height }
+  })
 
+  const bodies = await Promise.all(
+    blocks.map(async v => {
+      const body = Bodies.rectangle(v.x, v.y, v.width, v.height, { isStatic: true, friction: 0.5 })
       Composite.add(refs.engine.world, body)
-
-      const border = refs.debug
-        ? await createBorder({
-            position: [x, y, -6],
-            size: [width, height]
-          })
-        : null
-      return { body, border }
+      return body
     })
   )
+  const borders = refs.debug
+    ? await Promise.all(
+        blocks.map(v =>
+          createBorder({
+            position: [v.x, v.y, -6],
+            size: [v.width, v.height]
+          })
+        )
+      )
+    : null
 
   return {
+    blocks,
+    bodies,
     render({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) {
-      blocks.forEach(({ body, border }) => {
+      bodies.forEach((body, i) => {
         // const deltaX = refs.deltaT * 0.005
         // body.position.x -= deltaX
         if (body.position.x < -800) {
           Body.translate(body, { x: 1600, y: 0 })
         } else {
-          Body.translate(body, { x: -1, y: 0 })
+          // Body.translate(body, { x: -3, y: 0 })
         }
         if (refs.debug) {
-          border!.position[0] = body.position.x
-          border!.render({ modelMatrix, viewProjection })
+          borders![i].position[0] = body.position.x
+          borders![i].render({ modelMatrix, viewProjection })
         }
       })
       // if (refs.debug) {

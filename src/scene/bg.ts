@@ -31,18 +31,15 @@ export const createBackground = async () => {
 
   // const temp = mat4.create()
 
+  const entities = [sky, clouds, sea, farGround]
+
   return {
     render: ({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) => {
-      sky.render({ modelMatrix, viewProjection })
-
       clouds.uvOffset[0] = (clouds.uvOffset[0] + refs.deltaT * 0.00002) % 1
-      clouds.render({ modelMatrix, viewProjection })
-
       sea.uvOffset[0] = (sea.uvOffset[0] + refs.deltaT * 0.0001) % 1
-      sea.render({ modelMatrix, viewProjection })
 
-      // farGround.uvOffset[0] = (farGround.uvOffset[0] - dt * 0.0008) % 1
-      farGround.render({ modelMatrix, viewProjection })
+      // farGround.uvOffset[0] = (farGround.uvOffset[0] - dt * 0.0008) % 1ß
+      entities.forEach(v => v.render({ modelMatrix, viewProjection }))
     }
   }
 }

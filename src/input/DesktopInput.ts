@@ -44,46 +44,9 @@ export class DesktopInput {
       this.currentlyPressedKeys.set(e.key, false)
     }
 
-    const handleMouseMove = (e: MouseEvent) => {
-      this.mouseInput.x = e.screenX
-      this.mouseInput.y = e.screenY
-    }
-    const handleWheel = (e: WheelEvent) => {
-      this.mouseInput.wheel += e.deltaY
-    }
-    const handleDragStart = () => {
-      this.mouseInput.dragging = true
-    }
-    const handleDragEnd = () => {
-      this.mouseInput.dragging = false
-    }
     const addInputListener = () => {
       el.addEventListener('keydown', handleKeyDown)
       el.addEventListener('keyup', handleKeyUp)
-      el.addEventListener('mousemove', handleMouseMove, { passive: true })
-      el.addEventListener('mousedown', handleDragStart)
-      el.addEventListener('mouseup', handleDragEnd)
-      el.addEventListener('wheel', handleWheel, { passive: true })
-      const af = () => {
-        const now = performance.now()
-        if (now - this.t > 100) {
-          this.t = now
-          this.mouseInput.lastX = this.mouseInput.x
-          this.mouseInput.lastY = this.mouseInput.y
-          this.mouseInput.lastWheel = this.mouseInput.wheel
-        }
-        requestAnimationFrame(af)
-      }
-      this.raf = requestAnimationFrame(af)
-    }
-    const removeInputListener = () => {
-      el.removeEventListener('keydown', handleKeyDown)
-      el.removeEventListener('keyup', handleKeyUp)
-      el.removeEventListener('mousemove', handleMouseMove)
-      el.removeEventListener('mousedown', handleDragStart)
-      el.removeEventListener('mouseup', handleDragEnd)
-      el.removeEventListener('wheel', handleWheel)
-      cancelAnimationFrame(this.raf)
     }
 
     el.contentEditable = 'true'

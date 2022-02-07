@@ -22,7 +22,6 @@ export const createBorder = async (
   gl.enableVertexAttribArray(0)
   gl.vertexAttribPointer(0, 2, gl.FLOAT, true, 8, 0)
   gl.bindBuffer(gl.ARRAY_BUFFER, null)
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
 
   const mvp = mat4.create()
 
