@@ -5,7 +5,7 @@ import fsSource from './axis.frag'
 import { refs } from '../refs'
 
 export default async () => {
-  const gl = refs.gl!
+  const { gl } = refs
   const lines = new Float32Array([
     0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0,
     1, 0, 0, 1

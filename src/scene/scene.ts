@@ -1,6 +1,5 @@
 import UniversalCamera from '../camera/UniversalCamera'
 // import ArcRotateCamera from '../camera/ArcRotateCamera'
-import { DesktopInput } from '../input/DesktopInput'
 
 import { vec3, mat4 } from 'gl-matrix'
 import { Engine, Query } from 'matter-js'
@@ -10,12 +9,10 @@ import { createBackground } from './bg'
 import { refs } from '../refs'
 import { createPlayer } from './player'
 import { createGround } from './ground'
+import { Composite } from 'matter-js'
 
 export const createScene = async () => {
-  const gl = refs.gl!
-  const canvas = gl.canvas
-  refs.di = DesktopInput.getInstance(canvas)
-  const engine = refs.engine
+  const { canvas, gl, engine } = refs
   // engine.enableSleeping = true
   engine.gravity.y = -1
 
@@ -44,6 +41,7 @@ export const createScene = async () => {
       projectionMatrix = getProjection()
     }
 
+    Composite.translate(engine.world, { x: -2, y: 0 })
     const collision = Query.ray(
       ground.bodies,
       player.position,

@@ -4,21 +4,19 @@ import vs from './border.vert'
 import fs from './border.frag'
 import { refs } from '../refs'
 
-export const createBorder = async (
-  options: {
-    position: [number, number, number]
-    size: [number, number]
-  }
-) => {
-  const gl = refs.gl!
+export const createBorder = async (options: {
+  position: [number, number, number]
+  size: [number, number]
+}) => {
+  const { gl } = refs
   const shader = new Shader({ gl, vs, fs })
   shader.use()
-  const quad = [-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5]
+  const quad = new Float32Array([-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5])
   const vao = gl.createVertexArray()
   const vbo = gl.createBuffer()
   gl.bindVertexArray(vao)
   gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quad), gl.STATIC_DRAW)
+  gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW)
   gl.enableVertexAttribArray(0)
   gl.vertexAttribPointer(0, 2, gl.FLOAT, true, 8, 0)
   gl.bindBuffer(gl.ARRAY_BUFFER, null)

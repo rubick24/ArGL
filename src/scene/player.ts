@@ -1,7 +1,7 @@
-import { createAnimatedSprite } from '../sprite_animation'
+import { createAnimatedSprite } from '../sprite'
 import { createBorder } from '../border'
 import { mat4 } from 'gl-matrix'
-import { Bodies, Body, Events, Composite, Query } from 'matter-js'
+import { Bodies, Body, Composite } from 'matter-js'
 import { refs } from '../refs'
 
 export const createPlayer = async () => {
@@ -11,7 +11,7 @@ export const createPlayer = async () => {
     scale: [2, 2]
   })
 
-  const position = { x: -200, y: 200 }
+  const position = { x: 50, y: 200 }
   const size = { x: 40, y: 78 }
 
   const body = Bodies.rectangle(position.x, position.y, size.x, size.y, { inertia: Infinity })
@@ -36,7 +36,7 @@ export const createPlayer = async () => {
 
   const border = refs.debug
     ? await createBorder({
-        position: [position.x, position.y, -6],
+        position: [position.x, position.y, 0],
         size: [size.x, size.y]
       })
     : null
@@ -45,21 +45,21 @@ export const createPlayer = async () => {
     // Body.translate(body, { x: -3, y: 0 })
 
     // control
-    // const force = state.grounded ? 0.1 : 0.01
-    const vel = grounded ? 4 : 3
+    const force = grounded ? 0.1 : 0.01
+    // const vel = grounded ? 4 : 3
     const keyLeft = refs.di!.currentlyPressedKeys.get('ArrowLeft')
     const keyRight = refs.di!.currentlyPressedKeys.get('ArrowRight')
     if (!keyLeft && keyRight) {
       sprite.scale[0] = 2
       if (body.velocity.x < 3) {
-        Body.setVelocity(body, { x: vel, y: body.velocity.y })
-        // Body.applyForce(body, body.position, { x: force, y: 0 })
+        // Body.setVelocity(body, { x: vel, y: body.velocity.y })
+        Body.applyForce(body, body.position, { x: force, y: 0 })
       }
     } else if (keyLeft && !keyRight) {
       sprite.scale[0] = -2
       if (body.velocity.x > -3) {
-        Body.setVelocity(body, { x: -vel, y: body.velocity.y })
-        // Body.applyForce(body, body.position, { x: -force, y: 0 })
+        // Body.setVelocity(body, { x: -vel, y: body.velocity.y })
+        Body.applyForce(body, body.position, { x: -force, y: 0 })
       }
     }
 

@@ -1,9 +1,9 @@
 import { mat4 } from 'gl-matrix'
-import { SpriteAtlasJson } from './atlas'
-import Shader from '../shader'
+import { SpriteAtlasJson } from '../atlas'
+import Shader from '../../shader'
 import vs from './sprite.vert'
 import fs from './sprite.frag'
-import { refs } from '../refs'
+import { refs } from '../../refs'
 
 export const createAnimatedSprite = async (options: {
   texture: string
@@ -11,7 +11,7 @@ export const createAnimatedSprite = async (options: {
   position?: [number, number, number]
   scale?: [number, number]
 }) => {
-  const gl = refs.gl!
+  const { gl } = refs
   const shader = new Shader({ gl, vs, fs })
   shader.use()
   const quad = [-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5]
@@ -145,11 +145,17 @@ export const createAnimatedSprite = async (options: {
           spriteSourceSize.h / sourceSize.h
         ])
         shader.setUniform('sprite_position', 'VEC4', [
-          (frame.x + 2) / spriteSize.w,
-          (frame.y + 2) / spriteSize.h,
-          (frame.w - 4) / spriteSize.w,
-          (frame.h - 4) / spriteSize.h
+          frame.x / spriteSize.w,
+          frame.y / spriteSize.h,
+          frame.w / spriteSize.w,
+          frame.h / spriteSize.h
         ])
+        const endPixel = [
+          0.01 / (sourceSize.w * this.scale[0]),
+          0.01 / (sourceSize.h * this.scale[1])
+        ]
+        shader.setUniform('end_pixel', 'VEC2', endPixel)
+
         this.sourceSize = sourceSize
         this.spriteSourceSize = spriteSourceSize
         lastChange = refs.time
