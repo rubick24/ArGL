@@ -51,13 +51,13 @@ export const createGround = async () => {
             tile: 'cave_tiles_0.ase'
           },
           {
+            position: [-1, 0],
+            tile: 'cave_tiles_2.ase'
+          },
+          {
             position: [2, 0],
             tile: 'cave_tiles_43.ase',
             flip: 1
-          },
-          {
-            position: [-1, 0],
-            tile: 'cave_tiles_0.ase'
           },
           {
             position: [-2, 0],

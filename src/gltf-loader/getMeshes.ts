@@ -1,7 +1,7 @@
 import { GlTF } from '../types/glTF'
 import { IAccessor, IPrimitive, IMaterial, IMesh, ISkin } from './interfaces'
 import getDefaultMaterial from './getDefaultMaterial'
-import Shader from '../shader'
+import { createShader } from '../shader'
 import vsSource from './shader/vert'
 import fsSource from './shader/frag'
 
@@ -77,7 +77,7 @@ export default (
         }
       }
 
-      const shader = new Shader({
+      const shader = createShader({
         gl,
         vs: vsSource({
           defines: vertDefines.join('\n'),

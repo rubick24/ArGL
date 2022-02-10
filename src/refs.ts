@@ -2,8 +2,8 @@ import { Engine } from 'matter-js'
 import { DesktopInput } from './input/DesktopInput'
 
 const canvas = document.getElementById('main') as HTMLCanvasElement
-canvas.height = window.innerHeight
-canvas.width = window.innerWidth
+canvas.height = 360
+canvas.width = 1920
 const gl = canvas.getContext('webgl2', {
   premultipliedAlpha: true,
   antialias: false
@@ -33,5 +33,8 @@ export const refs = {
   di,
   deltaT: 0,
   lastT: 0,
-  time: 0
+  time: 0,
+  gameState: {
+    duration: 0
+  }
 }

@@ -1,7 +1,7 @@
 import { IScene, INode, ComputeJoints } from './interfaces'
 import createDraw from './draw'
 import { mat4 } from 'gl-matrix'
-import ArcRotateCamera from '../camera/ArcRotateCamera'
+import { ArcRotateCamera } from '../camera/ArcRotateCamera'
 
 import frameHooks from './frameHooks'
 

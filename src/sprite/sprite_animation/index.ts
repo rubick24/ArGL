@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { SpriteAtlasJson } from '../atlas'
-import Shader from '../../shader'
+import { createShader } from '../../shader'
 import vs from './sprite.vert'
 import fs from './sprite.frag'
 import { refs } from '../../refs'
@@ -12,7 +12,7 @@ export const createAnimatedSprite = async (options: {
   scale?: [number, number]
 }) => {
   const { gl } = refs
-  const shader = new Shader({ gl, vs, fs })
+  const shader = createShader({ gl, vs, fs })
   shader.use()
   const quad = [-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5]
   const vao = gl.createVertexArray()
@@ -150,7 +150,7 @@ export const createAnimatedSprite = async (options: {
           frame.w / spriteSize.w,
           frame.h / spriteSize.h
         ])
-        const endPixel = [
+        const endPixel: [number, number] = [
           0.01 / (sourceSize.w * this.scale[0]),
           0.01 / (sourceSize.h * this.scale[1])
         ]

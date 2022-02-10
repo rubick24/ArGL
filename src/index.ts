@@ -18,6 +18,7 @@ const renderLoop = (time: number) => {
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
   if (gameStage === AppState.InGame) {
+    refs.gameState.duration += refs.deltaT
     scene.render()
   }
 

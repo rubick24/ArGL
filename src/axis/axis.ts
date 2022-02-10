@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import Shader from '../shader'
+import { createShader } from '../shader'
 import vsSource from './axis.vert'
 import fsSource from './axis.frag'
 import { refs } from '../refs'
@@ -21,7 +21,7 @@ export default async () => {
   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 24, 12)
   gl.bindBuffer(gl.ARRAY_BUFFER, null)
 
-  const shader = new Shader({
+  const shader = createShader({
     gl,
     vs: vsSource,
     fs: fsSource

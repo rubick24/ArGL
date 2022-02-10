@@ -1,6 +1,7 @@
 import { mat4, quat, vec3 } from 'gl-matrix'
-import Shader, { uType } from '../shader'
+import { Shader, UniformType } from '../shader'
 
+export { UniformType } from '../shader'
 export type GLType = 'SCALAR' | 'VEC2' | 'VEC3' | 'VEC4' | 'MAT2' | 'MAT3' | 'MAT4'
 export type GLArrayType =
   | Int8Array
@@ -21,7 +22,6 @@ export interface IAccessor {
   bufferData: GLArrayType
 }
 
-export type UniformType = uType
 export interface IMaterial {
   uniforms: {
     name: string

@@ -1,9 +1,9 @@
-import Shader from '../../shader'
+import { createShader } from '../../shader'
 import { refs } from '../../refs'
 import vs from './sprite_map.vert'
 import fs from './sprite_map.frag'
 import { SpriteAtlasHashJson } from '../atlas'
-import { mat4 } from 'gl-matrix'
+import { vec2, mat4 } from 'gl-matrix'
 
 type GridData = {
   position: [number, number]
@@ -21,7 +21,7 @@ export const createSpriteMap = async (options: {
   scale?: [number, number]
 }) => {
   const { gl } = refs
-  const shader = new Shader({ gl, vs, fs })
+  const shader = createShader({ gl, vs, fs })
   const { tileSize, gridData } = options
   const quad = new Float32Array([-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5])
 
@@ -97,7 +97,7 @@ export const createSpriteMap = async (options: {
   const position = options.position || [0, 0, 0]
   const scale = options.scale || [1, 1]
 
-  const endPixel = [0.01 / (tileSize[0] * scale[0]), 0.01 / (tileSize[1] * scale[1])]
+  const endPixel: vec2 = [0.01 / (tileSize[0] * scale[0]), 0.01 / (tileSize[1] * scale[1])]
   shader.use()
   shader.setUniform('end_pixel', 'VEC2', endPixel)
 

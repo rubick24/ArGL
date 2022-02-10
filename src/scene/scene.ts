@@ -1,5 +1,5 @@
-import UniversalCamera from '../camera/UniversalCamera'
-// import ArcRotateCamera from '../camera/ArcRotateCamera'
+import { createCamera } from '../camera/UniversalCamera'
+// import { createCamera } from '../camera/ArcRotateCamera'
 
 import { vec3, mat4 } from 'gl-matrix'
 import { Engine, Query } from 'matter-js'
@@ -16,8 +16,16 @@ export const createScene = async () => {
   // engine.enableSleeping = true
   engine.gravity.y = -1
 
-  const camera = new UniversalCamera(vec3.fromValues(0, 0, 3), vec3.fromValues(0, 0, -1))
-  // const camera = new ArcRotateCamera(vec3.fromValues(0, 0, 0), Math.PI / 2, Math.PI / 2, 1000)
+  const camera = createCamera({
+    position: vec3.fromValues(0, 0, 3),
+    direction: vec3.fromValues(0, 0, -1)
+  })
+  // const camera = createCamera({
+  //   target: vec3.fromValues(0, 0, 0),
+  //   alpha: Math.PI / 2,
+  //   beta: Math.PI / 2,
+  //   radius: 1000
+  // })
 
   const drawAxis = await axis()
   const bg = await createBackground()
@@ -34,14 +42,14 @@ export const createScene = async () => {
   const viewProjection = mat4.create()
 
   const render = () => {
-    if (window.innerHeight !== canvas.height || window.innerWidth !== canvas.width) {
-      canvas.height = window.innerHeight
-      canvas.width = window.innerWidth
-      gl.viewport(0, 0, canvas.width, canvas.height)
-      projectionMatrix = getProjection()
-    }
+    // if (window.innerHeight !== canvas.height || window.innerWidth !== canvas.width) {
+    //   canvas.height = window.innerHeight
+    //   canvas.width = window.innerWidth
+    //   gl.viewport(0, 0, canvas.width, canvas.height)
+    //   projectionMatrix = getProjection()
+    // }
 
-    Composite.translate(engine.world, { x: -2, y: 0 })
+    Composite.translate(engine.world, { x: -0.1 * refs.deltaT, y: 0 })
     const collision = Query.ray(
       ground.bodies,
       player.position,

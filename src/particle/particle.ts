@@ -1,5 +1,5 @@
 import { vec3, mat4 } from 'gl-matrix'
-import Shader from '../shader'
+import { createShader } from '../shader'
 import updateVsSource from './shader/updateVert'
 import updateFsSource from './shader/update.frag'
 import displayVsSource from './shader/display.vert'
@@ -101,7 +101,7 @@ export default async (gl: WebGL2RenderingContext, config: any) => {
       return vao
     })
 
-    const shader = new Shader({
+    const shader = createShader({
       gl,
       vs: updateVsSource({
         define: `#define SEED ${Math.floor(Math.random() * 1e6)}`
@@ -158,7 +158,7 @@ export default async (gl: WebGL2RenderingContext, config: any) => {
       gl.bindVertexArray(null)
       return vao
     })
-    const shader = new Shader({
+    const shader = createShader({
       gl,
       vs: displayVsSource,
       fs: displayFsSource

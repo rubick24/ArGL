@@ -2,78 +2,124 @@ import { vec3, mat4 } from 'gl-matrix'
 // import DesktopInput from '../input/DesktopInput'
 // import TouchInput from '../input/TouchInput'
 
-export default class UniversalCamera {
-  public rotationMatrix: mat4 = mat4.identity(mat4.create())
-
-  private _viewMatrix: mat4 = mat4.create()
-  private _tempMat4: mat4 = mat4.create()
-  private _tempDir: vec3 = vec3.create()
-
-  constructor(
-    public position: vec3,
-    public direction: vec3,
-    public up = vec3.fromValues(0, 1, 0),
-    public fovY = Math.PI / 4
-  ) {
-    this.updateViewMatrix()
-    return new Proxy(this, {
-      set: (t, key, value, receiver) => {
-        const result = Reflect.set(t, key, value, receiver)
-        const observable: (string | number | symbol)[] = ['position', 'direction', 'up']
-        if (observable.includes(key)) {
-          t._checkLimit()
-          t.updateViewMatrix()
-        }
-        return result
-      }
-    })
-  }
-
-  public get viewMatrix() {
-    return this._viewMatrix
-  }
-
-  public _checkLimit() {
-    //
-  }
-
-  public updateViewMatrix() {
-    vec3.add(this._tempDir, this.position, this.direction)
-    mat4.lookAt(this._viewMatrix, this.position, this._tempDir, this.up)
-  }
-
-  public getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
-    return mat4.perspective(this._tempMat4, this.fovY, aspect, near, far)
-  }
-  public getOrthographicProjectionMatrix(
-    width: number,
-    height: number,
-    near: number,
-    far: number
-  ): mat4 {
-    const hw = width / 2
-    const hh = height / 2
-    return mat4.ortho(this._tempMat4, -hw, hw, -hh, hh, near, far)
-  }
-
-  // public processDesktopInput(di: DesktopInput) {
-  //   //
-  //   if (!di.mouseInput.dragging) {
-  //     return
-  //   }
-  //   const deltaX = di.mouseInput.x - di.mouseInput.lastX
-  //   const deltaY = di.mouseInput.y - di.mouseInput.lastY
-  //   let update = false
-  //   if (Math.abs(deltaX) > 1e-6) {
-  //     this.position[0] += deltaX / 1000
-  //     update = true
-  //   }
-  //   if (Math.abs(deltaY) > 1e-6) {
-  //     this.position[1] += -deltaY / 1000
-  //     update = true
-  //   }
-  //   if (update) {
-  //     this.updateViewMatrix()
-  //   }
-  // }
+export type UniversalCamera = {
+  position: vec3
+  direction: vec3
+  up: vec3
+  readonly viewMatrix: mat4
+  getProjectionMatrix(aspect: number, near: number, far: number): mat4
+  getOrthographicProjectionMatrix(width: number, height: number, near: number, far: number): mat4
 }
+
+export const createCamera = (options: {
+  position: vec3
+  direction: vec3
+  up?: vec3
+  fovY?: number
+}): UniversalCamera => {
+  let { position, direction } = options
+  let up = options.up || vec3.fromValues(0, 1, 0)
+  let fovY = options.fovY || Math.PI / 4
+
+  // const rotationMatrix: mat4 = mat4.create()
+
+  const viewMatrix: mat4 = mat4.create()
+  const tempMat4: mat4 = mat4.create()
+  const tempDir: vec3 = vec3.create()
+
+  const checkLimit = () => {}
+  const updateViewMatrix = () => {
+    vec3.add(tempDir, position, direction)
+    mat4.lookAt(viewMatrix, position, tempDir, up)
+  }
+  updateViewMatrix()
+
+  const r = {
+    position,
+    direction,
+    up,
+    fovY,
+    viewMatrix, // get
+    getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
+      return mat4.perspective(tempMat4, fovY, aspect, near, far)
+    },
+    getOrthographicProjectionMatrix(
+      width: number,
+      height: number,
+      near: number,
+      far: number
+    ): mat4 {
+      const hw = width / 2
+      const hh = height / 2
+      return mat4.ortho(tempMat4, -hw, hw, -hh, hh, near, far)
+    }
+  }
+
+  Object.defineProperties(r, {
+    position: {
+      get() {
+        return position
+      },
+      set(v) {
+        position = v
+        checkLimit()
+        updateViewMatrix()
+      }
+    },
+    direction: {
+      get() {
+        return direction
+      },
+      set(v) {
+        direction = v
+        checkLimit()
+        updateViewMatrix()
+      }
+    },
+    up: {
+      get() {
+        return up
+      },
+      set(v) {
+        up = v
+        checkLimit()
+        updateViewMatrix()
+      }
+    },
+    fovY: {
+      get() {
+        return up
+      },
+      set(v) {
+        fovY = v
+      }
+    },
+    viewMatrix: {
+      get() {
+        return viewMatrix
+      }
+    }
+  })
+  return r
+}
+
+// public processDesktopInput(di: DesktopInput) {
+//   //
+//   if (!di.mouseInput.dragging) {
+//     return
+//   }
+//   const deltaX = di.mouseInput.x - di.mouseInput.lastX
+//   const deltaY = di.mouseInput.y - di.mouseInput.lastY
+//   let update = false
+//   if (Math.abs(deltaX) > 1e-6) {
+//     this.position[0] += deltaX / 1000
+//     update = true
+//   }
+//   if (Math.abs(deltaY) > 1e-6) {
+//     this.position[1] += -deltaY / 1000
+//     update = true
+//   }
+//   if (update) {
+//     this.updateViewMatrix()
+//   }
+// }

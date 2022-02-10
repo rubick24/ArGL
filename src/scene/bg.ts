@@ -4,29 +4,29 @@ import { refs } from '../refs'
 export const createBackground = async () => {
   const sky = await createSprite({
     texture: 'sprite/bg/sky.png',
-    scale: [2, 2],
+    scale: [3, 3],
     repeat: [6, 1],
     position: [0, 152, -10]
   })
 
   const clouds = await createSprite({
     texture: 'sprite/bg/clouds.png',
-    scale: [2, 2],
+    scale: [3, 3],
     repeat: [1.235, 1],
     position: [0, 80, -9]
   })
 
   const sea = await createSprite({
     texture: 'sprite/bg/sea.png',
-    scale: [2, 2],
+    scale: [3, 3],
     repeat: [6, 1],
     position: [0, -96, -8]
   })
 
   const farGround = await createSprite({
     texture: 'sprite/bg/far-grounds.png',
-    position: [0, -82, -7],
-    scale: [2, 2]
+    scale: [3, 3],
+    position: [0, -82, -7]
   })
 
   // const temp = mat4.create()

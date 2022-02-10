@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import Shader from '../shader'
+import { createShader } from '../shader'
 import vs from './border.vert'
 import fs from './border.frag'
 import { refs } from '../refs'
@@ -9,7 +9,7 @@ export const createBorder = async (options: {
   size: [number, number]
 }) => {
   const { gl } = refs
-  const shader = new Shader({ gl, vs, fs })
+  const shader = createShader({ gl, vs, fs })
   shader.use()
   const quad = new Float32Array([-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5])
   const vao = gl.createVertexArray()

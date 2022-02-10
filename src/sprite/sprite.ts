@@ -1,7 +1,7 @@
 import vs from './sprite.vert'
 import fs from './sprite.frag'
-import Shader from '../shader'
-import { mat4 } from 'gl-matrix'
+import { createShader } from '../shader'
+import { vec2, mat4 } from 'gl-matrix'
 import { refs } from '../refs'
 
 export const createSprite = async (options: {
@@ -11,7 +11,7 @@ export const createSprite = async (options: {
   repeat?: [number, number]
 }) => {
   const { gl } = refs
-  const shader = new Shader({ gl, vs, fs })
+  const shader = createShader({ gl, vs, fs })
   const quad = new Float32Array([-0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5])
   const vao = gl.createVertexArray()
   const vbo = gl.createBuffer()
@@ -44,16 +44,18 @@ export const createSprite = async (options: {
   const scale = options.scale || [1, 1]
   const repeat = options.repeat || [1, 1]
   const position = options.position || [0, 0, 0]
-  const endPixel = [0.01 / (size[0] * scale[0]), 0.01 / (size[1] * scale[1])]
+  const uvOffset: vec2 = [0, 0]
+
+  const endPixel: vec2 = [0.01 / (size[0] * scale[0]), 0.01 / (size[1] * scale[1])]
   shader.use()
   shader.setUniform('end_pixel', 'VEC2', endPixel)
 
-  return {
+  const r = {
     size,
     scale,
     repeat,
     position,
-    uvOffset: [0, 0],
+    uvOffset,
 
     render({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) {
       gl.bindVertexArray(vao)
@@ -64,9 +66,21 @@ export const createSprite = async (options: {
       mat4.scale(mvp, mvp, [size[0] * scale[0] * repeat[0], size[1] * scale[1] * repeat[1], 1])
       mat4.mul(mvp, viewProjection, mvp)
       shader.setUniform('mvp_matrix', 'MAT4', mvp)
-      shader.setUniform('uv_offset', 'VEC2', this.uvOffset)
+      shader.setUniform('uv_offset', 'VEC2', uvOffset)
       shader.setUniform('repeat', 'VEC2', repeat)
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
   }
+  Object.defineProperties(r, {
+    uvOffset: {
+      get() {
+        return uvOffset
+      },
+      set(v: vec2) {
+        uvOffset[0] = v[0]
+        uvOffset[1] = v[1]
+      }
+    }
+  })
+  return r
 }
