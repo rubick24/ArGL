@@ -2,14 +2,14 @@ import { createCamera } from '../camera/UniversalCamera'
 // import { createCamera } from '../camera/ArcRotateCamera'
 
 import { vec3, mat4 } from 'gl-matrix'
-import { Engine, Query } from 'matter-js'
+import { Engine, Query, Composite, Events } from 'matter-js'
 
-import axis from '../axis/axis'
+// import axis from '../axis/axis'
 import { createBackground } from './bg'
-import { refs } from '../refs'
+import { refs, GameStage, changeStage } from '../refs'
 import { createPlayer } from './player'
 import { createGround } from './ground'
-import { Composite } from 'matter-js'
+import { createCoin } from './coin'
 
 export const createScene = async () => {
   const { canvas, gl, engine } = refs
@@ -27,10 +27,11 @@ export const createScene = async () => {
   //   radius: 1000
   // })
 
-  const drawAxis = await axis()
+  // const drawAxis = await axis()
   const bg = await createBackground()
   const player = await createPlayer()
   const ground = await createGround()
+  const coin = await createCoin()
 
   const getProjection = () => {
     // return camera.getProjectionMatrix(canvas.width / canvas.height, 0.001, 1e10)
@@ -40,6 +41,13 @@ export const createScene = async () => {
 
   const modelMatrix = mat4.create()
   const viewProjection = mat4.create()
+
+  refs.transformMap.leave[GameStage.MainMenu].push(() => {
+    refs.gameState.duration = 0
+    refs.gameState.score = 0
+    player.position = { x: 50, y: 200 }
+    Engine.update(engine, 0)
+  })
 
   const render = () => {
     // if (window.innerHeight !== canvas.height || window.innerWidth !== canvas.width) {
@@ -65,10 +73,18 @@ export const createScene = async () => {
       player.grounded = false
     }
 
+    // Events.on(engine, 'collisionStart', event => {
+    //   console.log(event.pairs[0].bodyA.label, event.pairs[0].bodyB.label)
+    // })
+
+    if (player.position.x < -960 || player.position.y < -180) {
+      changeStage(GameStage.MainMenu)
+    }
+
     Engine.update(engine, refs.deltaT)
 
     mat4.mul(viewProjection, projectionMatrix, camera.viewMatrix)
-    drawAxis({ viewProjection })
+    // drawAxis({ viewProjection })
     // camera.processDesktopInput(di)
 
     bg.render({
@@ -76,6 +92,7 @@ export const createScene = async () => {
       viewProjection
     })
     ground.render({ modelMatrix, viewProjection })
+    coin.render({ modelMatrix, viewProjection })
     player.render({ modelMatrix, viewProjection })
   }
   return {

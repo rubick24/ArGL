@@ -41,7 +41,6 @@ export const createAnimatedSprite = async (options: {
     })(),
     fetch(options.atlas).then(r => r.json()) as Promise<SpriteAtlasJson>
   ])
-  console.log(options.atlas, atlas)
   const spriteSize = atlas.meta.size
 
   const getDuration = (from: number, to: number) => {
@@ -83,13 +82,34 @@ export const createAnimatedSprite = async (options: {
     loop: number
   }[] = []
 
+  let scale = options.scale || [1, 1]
+  let position = options.position || [0, 0, 0]
+  let currentAnimation = atlas.meta.frameTags[0].name
   return {
-    scale: options.scale || [1, 1],
-    position: options.position || [0, 0, 0],
-    animations,
-    currentAnimation: atlas.meta.frameTags[0].name,
-    sourceSize: currentFrameObject.sourceSize,
-    spriteSourceSize: currentFrameObject.spriteSourceSize,
+    get scale() {
+      return scale
+    },
+    set scale(v) {
+      scale = v
+    },
+    get position() {
+      return position
+    },
+    set position(v) {
+      position = v
+    },
+    get animations() {
+      return animations
+    },
+    get currentAnimation() {
+      return currentAnimation
+    },
+    get sourceSize() {
+      return currentFrameObject.sourceSize
+    },
+    get spriteSourceSize() {
+      return currentFrameObject.spriteSourceSize
+    },
     setAnimation(name: string, loop = Infinity) {
       switchAnimation = {
         name,
@@ -107,26 +127,26 @@ export const createAnimatedSprite = async (options: {
 
       if (refs.time > lastChange + currentFrameObject.duration || switchAnimation) {
         if (switchAnimation) {
-          this.currentAnimation = switchAnimation.name
+          currentAnimation = switchAnimation.name
           loop = switchAnimation.loop
           switchAnimation = null
           currentFrame = 0
           currentLoop = 0
-          const animation = animations[this.currentAnimation]
+          const animation = animations[currentAnimation]
           currentFrameObject = atlas.frames[animation.start]
         } else {
-          const animation = animations[this.currentAnimation]
+          const animation = animations[currentAnimation]
           if (currentFrame + 1 === animation.length) {
             currentLoop += 1
           }
           if (currentLoop >= loop) {
             const next = animationQueue.shift()
             if (next) {
-              this.currentAnimation = next.name
+              currentAnimation = next.name
               loop = next.loop
               currentFrame = 0
               currentLoop = 0
-              const animation = animations[this.currentAnimation]
+              const animation = animations[currentAnimation]
               currentFrameObject = atlas.frames[animation.start]
             }
           } else {
@@ -151,19 +171,17 @@ export const createAnimatedSprite = async (options: {
           frame.h / spriteSize.h
         ])
         const endPixel: [number, number] = [
-          0.01 / (sourceSize.w * this.scale[0]),
-          0.01 / (sourceSize.h * this.scale[1])
+          0.01 / (sourceSize.w * scale[0]),
+          0.01 / (sourceSize.h * scale[1])
         ]
         shader.setUniform('end_pixel', 'VEC2', endPixel)
 
-        this.sourceSize = sourceSize
-        this.spriteSourceSize = spriteSourceSize
         lastChange = refs.time
       }
-      mat4.translate(mvp, modelMatrix, this.position)
+      mat4.translate(mvp, modelMatrix, position)
       mat4.scale(mvp, mvp, [
-        currentFrameObject.sourceSize.w * this.scale[0],
-        currentFrameObject.sourceSize.h * this.scale[1],
+        currentFrameObject.sourceSize.w * scale[0],
+        currentFrameObject.sourceSize.h * scale[1],
         1
       ])
       mat4.mul(mvp, viewProjection, mvp)

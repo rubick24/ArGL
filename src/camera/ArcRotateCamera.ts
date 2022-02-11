@@ -80,14 +80,52 @@ export const createCamera = (options: {
   checkLimit()
   updateViewMatrix()
 
-  const r = {
-    alpha,
-    beta,
-    target,
-    radius,
-    viewMatrix,
-    position,
-    up,
+  return {
+    get alpha() {
+      return beta
+    },
+    set alpha(v) {
+      beta = v
+      checkLimit()
+      updateViewMatrix()
+    },
+    get beta() {
+      return beta
+    },
+    set beta(v) {
+      beta = v
+      checkLimit()
+      updateViewMatrix()
+    },
+    get target() {
+      return target
+    },
+    set target(v) {
+      target = v
+      checkLimit()
+      updateViewMatrix()
+    },
+    get radius() {
+      return radius
+    },
+    set radius(v) {
+      radius = v
+      checkLimit()
+      updateViewMatrix()
+    },
+    get viewMatrix() {
+      return viewMatrix
+    },
+    get position() {
+      return position
+    },
+    get up() {
+      const m = rotationMatrix
+      up[0] = m[1]
+      up[1] = m[5]
+      up[2] = m[9]
+      return up
+    },
     getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
       return mat4.perspective(tempMat4, fovY, aspect, near, far)
     },
@@ -133,66 +171,4 @@ export const createCamera = (options: {
       }
     }
   }
-  Object.defineProperties(r, {
-    alpha: {
-      get() {
-        return alpha
-      },
-      set(v) {
-        alpha = v
-        checkLimit()
-        updateViewMatrix()
-      }
-    },
-    beta: {
-      get() {
-        return beta
-      },
-      set(v) {
-        beta = v
-        checkLimit()
-        updateViewMatrix()
-      }
-    },
-    target: {
-      get() {
-        return target
-      },
-      set(v) {
-        target = v
-        checkLimit()
-        updateViewMatrix()
-      }
-    },
-    radius: {
-      get() {
-        return radius
-      },
-      set(v) {
-        radius = v
-        checkLimit()
-        updateViewMatrix()
-      }
-    },
-    up: {
-      get() {
-        const m = this.rotationMatrix
-        up[0] = m[1]
-        up[1] = m[5]
-        up[2] = m[9]
-        return up
-      }
-    },
-    position: {
-      get() {
-        return position
-      }
-    },
-    viewMatrix: {
-      get() {
-        return viewMatrix
-      }
-    }
-  })
-  return r
 }

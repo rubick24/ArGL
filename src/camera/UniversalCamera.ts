@@ -6,6 +6,7 @@ export type UniversalCamera = {
   position: vec3
   direction: vec3
   up: vec3
+  fovY: number
   readonly viewMatrix: mat4
   getProjectionMatrix(aspect: number, near: number, far: number): mat4
   getOrthographicProjectionMatrix(width: number, height: number, near: number, far: number): mat4
@@ -22,7 +23,6 @@ export const createCamera = (options: {
   let fovY = options.fovY || Math.PI / 4
 
   // const rotationMatrix: mat4 = mat4.create()
-
   const viewMatrix: mat4 = mat4.create()
   const tempMat4: mat4 = mat4.create()
   const tempDir: vec3 = vec3.create()
@@ -34,26 +34,7 @@ export const createCamera = (options: {
   }
   updateViewMatrix()
 
-  const r = {
-    position,
-    direction,
-    up,
-    fovY,
-    viewMatrix, // get
-    getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
-      return mat4.perspective(tempMat4, fovY, aspect, near, far)
-    },
-    getOrthographicProjectionMatrix(
-      width: number,
-      height: number,
-      near: number,
-      far: number
-    ): mat4 {
-      const hw = width / 2
-      const hh = height / 2
-      return mat4.ortho(tempMat4, -hw, hw, -hh, hh, near, far)
-    }
-  }
+  const r = {}
 
   Object.defineProperties(r, {
     position: {
@@ -85,22 +66,56 @@ export const createCamera = (options: {
         checkLimit()
         updateViewMatrix()
       }
-    },
-    fovY: {
-      get() {
-        return up
-      },
-      set(v) {
-        fovY = v
-      }
-    },
-    viewMatrix: {
-      get() {
-        return viewMatrix
-      }
     }
   })
-  return r
+  return {
+    get position() {
+      return position
+    },
+    set position(v) {
+      position = v
+      checkLimit()
+      updateViewMatrix()
+    },
+    get direction() {
+      return direction
+    },
+    set direction(v) {
+      direction = v
+      checkLimit()
+      updateViewMatrix()
+    },
+    get up() {
+      return up
+    },
+    set up(v) {
+      up = v
+      checkLimit()
+      updateViewMatrix()
+    },
+    get fovY() {
+      return fovY
+    },
+    set fovY(v) {
+      fovY = v
+    },
+    get viewMatrix() {
+      return viewMatrix
+    }, // get
+    getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
+      return mat4.perspective(tempMat4, fovY, aspect, near, far)
+    },
+    getOrthographicProjectionMatrix(
+      width: number,
+      height: number,
+      near: number,
+      far: number
+    ): mat4 {
+      const hw = width / 2
+      const hh = height / 2
+      return mat4.ortho(tempMat4, -hw, hw, -hh, hh, near, far)
+    }
+  }
 }
 
 // public processDesktopInput(di: DesktopInput) {

@@ -1,53 +1,51 @@
 import { createScene } from './scene/scene'
-import { refs } from './refs'
+import { refs, GameStage, changeStage } from './refs'
 
 const { canvas, gl } = refs
 const scene = await createScene()
+scene.render()
 
-enum AppState {
-  MainMenu,
-  InGame,
-  Paused
-}
 let raf = NaN
-let gameStage = AppState.InGame
 refs.lastT = performance.now()
 const renderLoop = (time: number) => {
   refs.time = time
   refs.deltaT = Math.min(time - refs.lastT, 100)
+  raf = requestAnimationFrame(renderLoop)
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-  if (gameStage === AppState.InGame) {
-    refs.gameState.duration += refs.deltaT
+  if (refs.gameStage === GameStage.InGame) {
+    const state = refs.gameState
+    state.duration += refs.deltaT
+    if (Math.floor(state.duration / 1000) > state.score) {
+      state.score = Math.floor(state.duration / 1000)
+    }
     scene.render()
   }
-
   refs.lastT = time
-  raf = requestAnimationFrame(renderLoop)
 }
-raf = requestAnimationFrame(renderLoop)
 
-canvas.addEventListener('blur', e => {
-  console.log('blur')
-  if (gameStage === AppState.InGame) {
-    gameStage = AppState.Paused
-    cancelAnimationFrame(raf)
+refs.transformMap.enter[GameStage.InGame].push(() => {
+  refs.lastT = performance.now()
+  raf = requestAnimationFrame(renderLoop)
+})
+refs.transformMap.leave[GameStage.InGame].push(() => {
+  cancelAnimationFrame(raf)
+})
+
+canvas.addEventListener('blur', () => {
+  if (refs.gameStage === GameStage.InGame) {
+    changeStage(GameStage.Paused)
   }
 })
-canvas.addEventListener('focus', e => {
-  console.log('focus')
-  if (gameStage === AppState.Paused) {
-    gameStage = AppState.InGame
-    refs.lastT = performance.now()
-    raf = requestAnimationFrame(renderLoop)
+canvas.addEventListener('focus', () => {
+  if (refs.gameStage === GameStage.Paused) {
+    changeStage(GameStage.InGame)
   }
 })
-window.addEventListener('visibilitychange', e => {
-  console.log('visibilitychange', document.visibilityState)
+window.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
-    if (gameStage === AppState.InGame) {
-      gameStage = AppState.Paused
-      cancelAnimationFrame(raf)
+    if (refs.gameStage === GameStage.InGame) {
+      changeStage(GameStage.Paused)
     }
   }
 })

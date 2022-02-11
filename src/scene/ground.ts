@@ -1,11 +1,10 @@
 import { createSpriteMap } from '../sprite'
-import { createBorder } from '../border'
 import { Composite, Bodies, Body } from 'matter-js'
 import { refs } from '../refs'
 import { mat4 } from 'gl-matrix'
 
 export const createGround = async () => {
-  const blockLength = 6
+  const blockLength = 7
   const spaceWidth = 320
   const blockWidth = 160
   const blocks = new Array(blockLength).fill(0).map((_, i) => {
@@ -18,21 +17,15 @@ export const createGround = async () => {
 
   const bodies = await Promise.all(
     blocks.map(async v => {
-      const body = Bodies.rectangle(v.x, v.y, v.width, v.height, { isStatic: true, friction: 0.5 })
+      const body = Bodies.rectangle(v.x, v.y, v.width, v.height, {
+        isStatic: true,
+        friction: 0.5,
+        label: 'ground'
+      })
       Composite.add(refs.engine.world, body)
       return body
     })
   )
-  const borders = refs.debug
-    ? await Promise.all(
-        blocks.map(v =>
-          createBorder({
-            position: [v.x, v.y, 0],
-            size: [v.width, v.height]
-          })
-        )
-      )
-    : null
 
   const sprites = await Promise.all(
     blocks.map(async v =>
@@ -120,10 +113,7 @@ export const createGround = async () => {
         // body.position.x -= deltaX
         if (body.position.x < -(spaceWidth * blockLength) / 2) {
           Body.translate(body, { x: spaceWidth * blockLength, y: 0 })
-        } else {
-          // Body.translate(body, { x: -3, y: 0 })
         }
-
         // spriteMap.render({ modelMatrix, viewProjection })
         sprites[i].position[0] = body.position.x
         sprites[i].render({ modelMatrix, viewProjection })

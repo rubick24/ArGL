@@ -50,12 +50,18 @@ export const createSprite = async (options: {
   shader.use()
   shader.setUniform('end_pixel', 'VEC2', endPixel)
 
-  const r = {
+  return {
     size,
     scale,
     repeat,
     position,
-    uvOffset,
+    get uvOffset() {
+      return uvOffset
+    },
+    set uvOffset(v) {
+      uvOffset[0] = v[0]
+      uvOffset[1] = v[1]
+    },
 
     render({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) {
       gl.bindVertexArray(vao)
@@ -71,16 +77,4 @@ export const createSprite = async (options: {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
   }
-  Object.defineProperties(r, {
-    uvOffset: {
-      get() {
-        return uvOffset
-      },
-      set(v: vec2) {
-        uvOffset[0] = v[0]
-        uvOffset[1] = v[1]
-      }
-    }
-  })
-  return r
 }

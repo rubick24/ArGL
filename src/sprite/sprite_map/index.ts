@@ -113,17 +113,15 @@ export const createSpriteMap = async (options: {
     shader.setUniform('view_projection', 'MAT4', viewProjection)
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, gridData.length)
   }
-  const r = { position, render }
-  Object.defineProperties(r, {
-    position: {
-      get() {
-        return position
-      },
-      set(v) {
-        position[0] = v[0]
-        position[1] = v[1]
-      }
-    }
-  })
-  return r
+
+  return {
+    get position() {
+      return position
+    },
+    set position(v) {
+      position[0] = v[0]
+      position[1] = v[1]
+    },
+    render
+  }
 }

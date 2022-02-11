@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script
+      src="https://activity.hdslb.com/blackboard/static/20220211/00979505aec5edd6e5c2f8c096fa0f62/RPVEUNWPF0.js"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const { Engine, Render, Runner, Bodies, Body, Composite, Events, Detector, Constraint } = Matter
+      // create an engine
+      var engine = Engine.create()
+
+      // create a renderer
+      var render = Render.create({
+        element: document.body,
+        engine: engine
+      })
+
+      // create two boxes and a ground
+      var boxA = Bodies.rectangle(400, 200, 80, 80, {
+        inertia: Infinity,
+        label: 'A',
+        collisionFilter: {
+          category: 1,
+          mask: 1 | 4
+        }
+      })
+      var boxB = Bodies.rectangle(450, 50, 80, 80, {
+        isSensor: true,
+        label: 'B',
+        collisionFilter: {
+          category: 2,
+          mask: 2 | 4
+        }
+      })
+      var ground = Bodies.rectangle(400, 550, 800, -100, {
+        isStatic: true,
+        label: 'G',
+        collisionFilter: {
+          category: 4,
+          mask: 1 | 2 | 4
+        }
+      })
+
+      var c = Constraint.create({
+        bodyA: boxA,
+        bodyB: boxB,
+        stiffness: 0.4
+      })
+
+      // add all of the bodies to the world
+      Composite.add(engine.world, [boxA, boxB, ground])
+      Composite.add(engine.world, c)
+
+      Render.run(render)
+
+      let lastT = performance.now()
+      let raf = NaN
+      const af = t => {
+        const deltaT = t - lastT
+        lastT = t
+        raf = requestAnimationFrame(af)
+        Body.setPosition(boxB, { x: boxA.position.x, y: boxA.position.y + 50 })
+
+        Engine.update(engine, deltaT)
+      }
+      raf = requestAnimationFrame(af)
+
+      Events.on(engine, 'collisionStart', event => {
+        event.pairs.forEach(p => {
+          console.log(p.bodyA.label, p.bodyB.label)
+        })
+      })
+    </script>
+  </body>
+</html>

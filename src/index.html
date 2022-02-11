@@ -10,13 +10,53 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        background-color: #000;
+        /* background-color: #000; */
+      }
+      #banner-game {
+        /* width: 1920px;
+        height: 360px; */
+        width: 100%;
+        position: relative;
+        font-family: 'Zpix';
+        cursor: pointer;
+      }
+      #banner-game canvas {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 16 / 3;
         /* image-rendering: crisp-edges;
         image-rendering: pixelated; */
+      }
+      .score {
+        position: absolute;
+        color: #fff;
+        font-size: 36px;
+        top: 24px;
+        right: 24px;
+        text-shadow: 3px 3px #000;
+      }
+      .start {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #333;
+        color: #fff;
+        border-radius: 4px;
+        width: 200px;
+        height: 60px;
+        box-sizing: border-box;
+        font-size: 36px;
+        padding-top: 12px;
+        text-align: center;
       }
     </style>
   </head>
   <body>
-    <canvas id="main"></canvas>
+    <div id="banner-game">
+      <canvas width="1920" height="360" id="main"></canvas>
+      <div class="score"></div>
+      <div class="start">START</div>
+    </div>
   </body>
 </html>
