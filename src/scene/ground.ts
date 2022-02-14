@@ -8,8 +8,8 @@ export const createGround = async () => {
   const spaceWidth = 320
   const blockWidth = 160
   const blocks = new Array(blockLength).fill(0).map((_, i) => {
-    const x = i * spaceWidth - 200
-    const y = -150 + Math.random() * 150
+    const x = i * spaceWidth + 100
+    const y = -150 + Math.floor(Math.random() * 100)
     const width = blockWidth
     const height = 96
     return { x, y, width, height }
@@ -20,7 +20,12 @@ export const createGround = async () => {
       const body = Bodies.rectangle(v.x, v.y, v.width, v.height, {
         isStatic: true,
         friction: 0.5,
-        label: 'ground'
+        frictionAir: 0.6,
+        label: 'ground',
+        collisionFilter: {
+          category: 2,
+          mask: 0b1111
+        }
       })
       Composite.add(refs.engine.world, body)
       return body
@@ -112,10 +117,19 @@ export const createGround = async () => {
         // const deltaX = refs.deltaT * 0.005
         // body.position.x -= deltaX
         if (body.position.x < -(spaceWidth * blockLength) / 2) {
-          Body.translate(body, { x: spaceWidth * blockLength, y: 0 })
+          if (!body.isStatic) {
+            Body.setStatic(body, true)
+            Body.setVelocity(body, { x: 0, y: 0 })
+          }
+          Body.setPosition(body, {
+            x: (spaceWidth * blockLength) / 2,
+            y: -150 + Math.random() * 100
+          })
+          // Body.translate(body, { x: spaceWidth * blockLength, y: 0 })
         }
         // spriteMap.render({ modelMatrix, viewProjection })
         sprites[i].position[0] = body.position.x
+        sprites[i].position[1] = body.position.y
         sprites[i].render({ modelMatrix, viewProjection })
 
         // if (refs.debug) {

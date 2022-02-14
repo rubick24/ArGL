@@ -97,9 +97,9 @@ export const createSpriteMap = async (options: {
   const position = options.position || [0, 0, 0]
   const scale = options.scale || [1, 1]
 
-  const endPixel: vec2 = [0.01 / (tileSize[0] * scale[0]), 0.01 / (tileSize[1] * scale[1])]
   shader.use()
-  shader.setUniform('end_pixel', 'VEC2', endPixel)
+  // const endPixel: vec2 = [0.01 / (tileSize[0] * scale[0]), 0.01 / (tileSize[1] * scale[1])]
+  // shader.setUniform('end_pixel', 'VEC2', endPixel)
 
   const render = ({ modelMatrix, viewProjection }: { modelMatrix: mat4; viewProjection: mat4 }) => {
     gl.bindVertexArray(vao)

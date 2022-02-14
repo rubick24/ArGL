@@ -1,7 +1,7 @@
 import { createAnimatedSprite } from '../sprite'
 // import { createBorder } from '../border'
 import { mat4 } from 'gl-matrix'
-import { Bodies, Body, Composite } from 'matter-js'
+import { Bodies, Body, Composite, Events } from 'matter-js'
 import { refs } from '../refs'
 
 export const createPlayer = async () => {
@@ -16,13 +16,33 @@ export const createPlayer = async () => {
 
   const body = Bodies.rectangle(position.x, position.y, size.x, size.y, {
     inertia: Infinity,
-    label: 'player'
+    label: 'player',
+    collisionFilter: {
+      category: 1,
+      mask: 0b0011
+    }
   })
   Body.setMass(body, 10)
   Body.setVelocity(body, { x: 0, y: 0 })
 
+  const groundSensor = Bodies.rectangle(
+    position.x,
+    position.y - size.y / 4 - 10,
+    size.x - 10,
+    size.y / 2,
+    {
+      isSensor: true,
+      inertia: Infinity,
+      label: 'groundSensor',
+      collisionFilter: {
+        category: 4,
+        mask: 0b0110
+      }
+    }
+  )
+
   let grounded = false
-  Composite.add(refs.engine.world, body)
+  Composite.add(refs.engine.world, [body, groundSensor])
 
   window.addEventListener('keydown', e => {
     const m: Record<string, () => void> = {
@@ -64,6 +84,22 @@ export const createPlayer = async () => {
       }
     }
 
+    Body.setPosition(groundSensor, { x: body.position.x, y: body.position.y - size.y / 4 - 10 })
+    Body.setVelocity(groundSensor, { x: 0, y: 0 })
+    Events.on(refs.engine, 'collisionStart', event => {
+      if (event.pairs.some(p => p.bodyA.label === 'groundSensor') && !grounded) {
+        sprite.setAnimation('land', 1)
+        sprite.pushAnimation('idle')
+        grounded = true
+      }
+    })
+    Events.on(refs.engine, 'collisionEnd', event => {
+      if (event.pairs.some(p => p.bodyA.label === 'groundSensor') && grounded) {
+        sprite.setAnimation('jump_rise')
+        grounded = false
+      }
+    })
+
     if (grounded) {
       if (sprite.currentAnimation !== 'run' && (keyLeft || keyRight)) {
         sprite.setAnimation('run')
@@ -101,10 +137,6 @@ export const createPlayer = async () => {
     set position(v) {
       Body.setPosition(body, v)
       Body.setVelocity(body, { x: 0, y: 0 })
-      sprite.position = [v.x, v.y + 45, 0]
-      // if (refs.debug) {
-      //   border!.position = [v.x, v.y, border!.position[2]]
-      // }
     },
     get size() {
       return size

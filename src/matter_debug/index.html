@@ -12,7 +12,7 @@
       crossorigin="anonymous"
     ></script>
     <script>
-      const { Engine, Render, Runner, Bodies, Body, Composite, Events, Detector, Constraint } = Matter
+      const { Engine, Render, Bodies, Body, Composite, Events } = Matter
       // create an engine
       var engine = Engine.create()
 
@@ -22,8 +22,11 @@
         engine: engine
       })
 
+      const position = { x: 400, y: 200 }
+      const size = { x: 40, y: 78 }
+
       // create two boxes and a ground
-      var boxA = Bodies.rectangle(400, 200, 80, 80, {
+      var boxA = Bodies.rectangle(position.x, position.y, size.x, size.y, {
         inertia: Infinity,
         label: 'A',
         collisionFilter: {
@@ -31,14 +34,23 @@
           mask: 1 | 4
         }
       })
-      var boxB = Bodies.rectangle(450, 50, 80, 80, {
-        isSensor: true,
-        label: 'B',
-        collisionFilter: {
-          category: 2,
-          mask: 2 | 4
+      var boxB = Bodies.rectangle(
+        position.x,
+        position.y + size.y / 4 + 10,
+        size.x - 10,
+        size.y / 2,
+        {
+          inertia: Infinity,
+          isSensor: true,
+          // isStatic: true,
+          label: 'B',
+          collisionFilter: {
+            category: 2,
+            mask: 2 | 4
+          }
         }
-      })
+      )
+
       var ground = Bodies.rectangle(400, 550, 800, -100, {
         isStatic: true,
         label: 'G',
@@ -48,15 +60,7 @@
         }
       })
 
-      var c = Constraint.create({
-        bodyA: boxA,
-        bodyB: boxB,
-        stiffness: 0.4
-      })
-
-      // add all of the bodies to the world
       Composite.add(engine.world, [boxA, boxB, ground])
-      Composite.add(engine.world, c)
 
       Render.run(render)
 
@@ -66,7 +70,8 @@
         const deltaT = t - lastT
         lastT = t
         raf = requestAnimationFrame(af)
-        Body.setPosition(boxB, { x: boxA.position.x, y: boxA.position.y + 50 })
+        Body.setPosition(boxB, { x: boxA.position.x, y: boxA.position.y + size.y / 4 + 10 })
+        Body.setVelocity(boxB, { x: 0, y: 0 })
 
         Engine.update(engine, deltaT)
       }

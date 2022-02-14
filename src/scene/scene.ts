@@ -2,7 +2,7 @@ import { createCamera } from '../camera/UniversalCamera'
 // import { createCamera } from '../camera/ArcRotateCamera'
 
 import { vec3, mat4 } from 'gl-matrix'
-import { Engine, Query, Composite, Events } from 'matter-js'
+import { Engine, Composite, Events, Body } from 'matter-js'
 
 // import axis from '../axis/axis'
 import { createBackground } from './bg'
@@ -13,7 +13,6 @@ import { createCoin } from './coin'
 
 export const createScene = async () => {
   const { canvas, gl, engine } = refs
-  // engine.enableSleeping = true
   engine.gravity.y = -1
 
   const camera = createCamera({
@@ -49,6 +48,23 @@ export const createScene = async () => {
     Engine.update(engine, 0)
   })
 
+  Events.on(refs.engine, 'collisionStart', event => {
+    // event.pairs.forEach(p => {
+    //   console.log(p.bodyA.label, p.bodyB.label)
+    // })
+
+    // const p = event.pairs.find(p => p.bodyA.label === 'player' && p.bodyB.label === 'ground')
+    // if (p && p.bodyB.isStatic) {
+    //   Body.setStatic(p.bodyB, false)
+    // }
+
+    // touch coin
+    if (event.pairs.some(p => p.bodyA.label === 'player' && p.bodyB.label === 'coin')) {
+      console.log('coin')
+      coin.position = { x: 960 + 100 * Math.floor(Math.random() * 10), y: 100 }
+    }
+  })
+
   const render = () => {
     // if (window.innerHeight !== canvas.height || window.innerWidth !== canvas.width) {
     //   canvas.height = window.innerHeight
@@ -57,25 +73,11 @@ export const createScene = async () => {
     //   projectionMatrix = getProjection()
     // }
 
-    Composite.translate(engine.world, { x: -0.1 * refs.deltaT, y: 0 })
-    const collision = Query.ray(
-      ground.bodies,
-      player.position,
-      {
-        x: player.position.x,
-        y: player.position.y - player.size.y / 2 - 5
-      },
-      player.size.x - 5
-    )
-    if (collision.length > 0 && !player.grounded) {
-      player.grounded = true
-    } else if (collision.length === 0 && player.grounded) {
-      player.grounded = false
+    Composite.translate(engine.world, { x: -0.2 * refs.deltaT, y: 0 })
+    if (coin.position.x < -1060) {
+      // miss coin
+      coin.position = { x: 960 + 100 * Math.floor(Math.random() * 10), y: 100 }
     }
-
-    // Events.on(engine, 'collisionStart', event => {
-    //   console.log(event.pairs[0].bodyA.label, event.pairs[0].bodyB.label)
-    // })
 
     if (player.position.x < -960 || player.position.y < -180) {
       changeStage(GameStage.MainMenu)

@@ -170,11 +170,6 @@ export const createAnimatedSprite = async (options: {
           frame.w / spriteSize.w,
           frame.h / spriteSize.h
         ])
-        const endPixel: [number, number] = [
-          0.01 / (sourceSize.w * scale[0]),
-          0.01 / (sourceSize.h * scale[1])
-        ]
-        shader.setUniform('end_pixel', 'VEC2', endPixel)
 
         lastChange = refs.time
       }
