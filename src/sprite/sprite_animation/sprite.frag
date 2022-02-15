@@ -5,12 +5,13 @@ uniform sampler2D spirte_texture;
 
 uniform vec4 sprite_position;
 uniform vec4 sprite_box;
+uniform vec2 half_pixel;
 
 in vec2 position;
 out vec4 fragColor;
 
 void main() {
-  vec2 uv = position + 0.5;
+  vec2 uv = half_pixel + (position + 0.5) * (1. - half_pixel * 2.);
   uv.y = 1. - uv.y;
   if(uv.x < sprite_box.x || uv.x > (sprite_box.x + sprite_box.z) || uv.y < sprite_box.y || uv.y > (sprite_box.y + sprite_box.w)) {
     // fragColor = vec4(0.0, 0.4, 0.5, 1.0);

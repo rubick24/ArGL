@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { vec2, mat4 } from 'gl-matrix'
 import { SpriteAtlasJson } from '../atlas'
 import { createShader } from '../../shader'
 import vs from './sprite.vert'
@@ -170,6 +170,8 @@ export const createAnimatedSprite = async (options: {
           frame.w / spriteSize.w,
           frame.h / spriteSize.h
         ])
+        const halfPixel: vec2 = [0.5 / (sourceSize.w * scale[0]), 0.5 / (sourceSize.h * scale[1])]
+        shader.setUniform('half_pixel', 'VEC2', halfPixel)
 
         lastChange = refs.time
       }

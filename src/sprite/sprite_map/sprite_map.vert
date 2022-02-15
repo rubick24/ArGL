@@ -8,7 +8,7 @@ layout(location = 3) in vec2 i_flip_rotate;
 
 uniform mat4 model_matrix;
 uniform mat4 view_projection;
-
+uniform vec2 half_pixel;
 out vec2 suv;
 
 const float PI = 3.1415926535897932384626433832795;
@@ -17,7 +17,7 @@ vec2 rotate2d(in vec2 p, in float rad) {
 }
 
 void main() {
-  vec2 uv = i_position + 0.5;
+  vec2 uv = half_pixel + (i_position + 0.5) * (1. - half_pixel * 2.);
   float flip = i_flip_rotate.x;
   if(flip > 0.5 && flip < 1.5 || flip > 2.5) {
     uv.x = 1.0 - uv.x;

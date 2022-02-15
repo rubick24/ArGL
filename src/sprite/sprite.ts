@@ -46,6 +46,10 @@ export const createSprite = async (options: {
   const position = options.position || [0, 0, 0]
   const uvOffset: vec2 = [0, 0]
 
+  const halfPixel: vec2 = [0.5 / (size[0] * scale[0]), 0.5 / (size[1] * scale[1])]
+  shader.use()
+  shader.setUniform('half_pixel', 'VEC2', halfPixel)
+
   return {
     size,
     scale,

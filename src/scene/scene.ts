@@ -53,10 +53,10 @@ export const createScene = async () => {
     //   console.log(p.bodyA.label, p.bodyB.label)
     // })
 
-    // const p = event.pairs.find(p => p.bodyA.label === 'player' && p.bodyB.label === 'ground')
-    // if (p && p.bodyB.isStatic) {
-    //   Body.setStatic(p.bodyB, false)
-    // }
+    const p = event.pairs.find(p => p.bodyA.label === 'player' && p.bodyB.label === 'ground')
+    if (p && p.bodyB.isStatic) {
+      Body.setStatic(p.bodyB, false)
+    }
 
     // touch coin
     if (event.pairs.some(p => p.bodyA.label === 'player' && p.bodyB.label === 'coin')) {
@@ -64,6 +64,9 @@ export const createScene = async () => {
       coin.position = { x: 960 + 100 * Math.floor(Math.random() * 10), y: 100 }
     }
   })
+
+  // camera not moving
+  mat4.mul(viewProjection, projectionMatrix, camera.viewMatrix)
 
   const render = () => {
     // if (window.innerHeight !== canvas.height || window.innerWidth !== canvas.width) {
@@ -85,7 +88,10 @@ export const createScene = async () => {
 
     Engine.update(engine, refs.deltaT)
 
-    mat4.mul(viewProjection, projectionMatrix, camera.viewMatrix)
+    // viewProjection.forEach((v, i) => {
+    //   viewProjection[i] = Math.round(v)
+    // })
+    // console.log(viewProjection)
     // drawAxis({ viewProjection })
     // camera.processDesktopInput(di)
 

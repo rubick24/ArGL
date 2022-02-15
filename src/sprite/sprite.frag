@@ -4,12 +4,13 @@ precision mediump float;
 uniform sampler2D spirte_texture;
 uniform vec2 repeat;
 uniform vec2 uv_offset;
+uniform vec2 half_pixel;
 
 in vec2 position;
 out vec4 fragColor;
 
 void main() {
-  vec2 uv = position + 0.5;
+  vec2 uv = half_pixel + (position + 0.5) * (1. - half_pixel * 2.);
   uv.y = 1. - uv.y;
   uv = fract(fract(uv * repeat) + uv_offset);
   fragColor = texture(spirte_texture, uv);
