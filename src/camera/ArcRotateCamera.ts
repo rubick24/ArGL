@@ -1,6 +1,6 @@
 import { vec3, mat4 } from 'gl-matrix'
 import { DesktopInput } from '../input/DesktopInput'
-import TouchInput from '../input/TouchInput'
+// import TouchInput from '../input/TouchInput'
 
 const globalUp = vec3.fromValues(0, 1, 0)
 
@@ -15,7 +15,7 @@ export type ArcRotateCamera = {
   getProjectionMatrix(aspect: number, near: number, far: number): mat4
   getOrthographicProjectionMatrix(width: number, height: number, near: number, far: number): mat4
   processDesktopInput(di: DesktopInput): void
-  processTouchInput(ti: TouchInput): void
+  // processTouchInput(ti: TouchInput): void
 }
 
 export const createCamera = (options: {
@@ -40,12 +40,21 @@ export const createCamera = (options: {
   const tempAxis: vec3 = vec3.create()
   const up: vec3 = vec3.create()
 
+  const getUp = () => {
+    const m = rotationMatrix
+    up[0] = m[1]
+    up[1] = m[5]
+    up[2] = m[9]
+    return up
+  }
+
   const updateViewMatrix = () => {
     const cosA = Math.cos(alpha)
     const sinA = Math.sin(alpha)
     const cosB = Math.cos(beta)
     const sinB = Math.sin(beta) !== 0 ? Math.sin(beta) : Number.EPSILON
 
+    getUp()
     if (!vec3.equals(up, globalUp)) {
       vec3.cross(tempAxis, globalUp, up)
       vec3.normalize(tempAxis, tempAxis)
@@ -120,11 +129,7 @@ export const createCamera = (options: {
       return position
     },
     get up() {
-      const m = rotationMatrix
-      up[0] = m[1]
-      up[1] = m[5]
-      up[2] = m[9]
-      return up
+      return getUp()
     },
     getProjectionMatrix(aspect: number, near: number, far: number): mat4 {
       return mat4.perspective(tempMat4, fovY, aspect, near, far)
@@ -140,35 +145,42 @@ export const createCamera = (options: {
       return mat4.ortho(tempMat4, -hw, hw, -hh, hh, near, far)
     },
     processDesktopInput(di: DesktopInput) {
-      if (di.mouseInput.dragging) {
-        const deltaX = di.mouseInput.x - di.mouseInput.lastX
-        const deltaY = di.mouseInput.y - di.mouseInput.lastY
+      if (di.currentlyPressedKeys.get('w')) {
+        const deltaX = 5
         const radianX = (deltaX / di.el.clientWidth) * Math.PI * 2
-        const radianY = -(deltaY / di.el.clientHeight) * Math.PI * 2
         alpha += radianX
-        beta += radianY
+        updateViewMatrix()
+        console.log(alpha)
       }
-      const deltaWheel = di.mouseInput.lastWheel - di.mouseInput.wheel
-      radius += deltaWheel / 1000
+      // if (di.mouseInput.dragging) {
+      //   const deltaX = di.mouseInput.x - di.mouseInput.lastX
+      //   const deltaY = di.mouseInput.y - di.mouseInput.lastY
+      //   const radianX = (deltaX / di.el.clientWidth) * Math.PI * 2
+      //   const radianY = -(deltaY / di.el.clientHeight) * Math.PI * 2
+      //   alpha += radianX
+      //   beta += radianY
+      // }
+      // const deltaWheel = di.mouseInput.lastWheel - di.mouseInput.wheel
+      // radius += deltaWheel / 1000
     },
-    processTouchInput(ti: TouchInput) {
-      const deltas = ti.touchList.map((touch, i) => {
-        const lastTouch = ti.lastTouchList.find(v => v.identifier === touch.identifier)
-        if (lastTouch) {
-          return {
-            deltaX: touch.screenX - lastTouch.screenX,
-            deltaY: touch.screenY - lastTouch.screenY
-          }
-        } else {
-          return { deltaX: 0, deltaY: 0 }
-        }
-      })
-      if (deltas.length === 1) {
-        const radianX = (deltas[0].deltaX / ti.el.clientWidth) * Math.PI
-        const radianY = -(deltas[0].deltaY / ti.el.clientHeight) * Math.PI
-        alpha += radianX
-        beta += radianY
-      }
-    }
+    // processTouchInput(ti: TouchInput) {
+    //   const deltas = ti.touchList.map((touch, i) => {
+    //     const lastTouch = ti.lastTouchList.find(v => v.identifier === touch.identifier)
+    //     if (lastTouch) {
+    //       return {
+    //         deltaX: touch.screenX - lastTouch.screenX,
+    //         deltaY: touch.screenY - lastTouch.screenY
+    //       }
+    //     } else {
+    //       return { deltaX: 0, deltaY: 0 }
+    //     }
+    //   })
+    //   if (deltas.length === 1) {
+    //     const radianX = (deltas[0].deltaX / ti.el.clientWidth) * Math.PI
+    //     const radianY = -(deltas[0].deltaY / ti.el.clientHeight) * Math.PI
+    //     alpha += radianX
+    //     beta += radianY
+    //   }
+    // }
   }
 }

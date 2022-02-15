@@ -23,7 +23,7 @@ export const createScene = async () => {
   //   target: vec3.fromValues(0, 0, 0),
   //   alpha: Math.PI / 2,
   //   beta: Math.PI / 2,
-  //   radius: 1000
+  //   radius: 500
   // })
 
   // const drawAxis = await axis()
@@ -33,8 +33,8 @@ export const createScene = async () => {
   const coin = await createCoin()
 
   const getProjection = () => {
-    // return camera.getProjectionMatrix(canvas.width / canvas.height, 0.001, 1e10)
-    return camera.getOrthographicProjectionMatrix(canvas.width, canvas.height, 0.01, 1000)
+    // return camera.getProjectionMatrix(canvas.width / canvas.height, 0.5, 1e4)
+    return camera.getOrthographicProjectionMatrix(canvas.width, canvas.height, 0.1, 1000)
   }
   let projectionMatrix = getProjection()
 
@@ -65,9 +65,6 @@ export const createScene = async () => {
     }
   })
 
-  // camera not moving
-  mat4.mul(viewProjection, projectionMatrix, camera.viewMatrix)
-
   const render = () => {
     // if (window.innerHeight !== canvas.height || window.innerWidth !== canvas.width) {
     //   canvas.height = window.innerHeight
@@ -75,6 +72,7 @@ export const createScene = async () => {
     //   gl.viewport(0, 0, canvas.width, canvas.height)
     //   projectionMatrix = getProjection()
     // }
+    // camera.processDesktopInput(refs.di)
 
     Composite.translate(engine.world, { x: -0.2 * refs.deltaT, y: 0 })
     if (coin.position.x < -1060) {
@@ -88,13 +86,8 @@ export const createScene = async () => {
 
     Engine.update(engine, refs.deltaT)
 
-    // viewProjection.forEach((v, i) => {
-    //   viewProjection[i] = Math.round(v)
-    // })
-    // console.log(viewProjection)
+    mat4.mul(viewProjection, projectionMatrix, camera.viewMatrix)
     // drawAxis({ viewProjection })
-    // camera.processDesktopInput(di)
-
     bg.render({
       modelMatrix,
       viewProjection
