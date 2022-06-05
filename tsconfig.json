@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ]
+  }
+}
